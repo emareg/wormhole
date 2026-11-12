@@ -1,0 +1,3858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lJVrlGuBZH887RM4YNbT5b6tHbAgoopcoyqM3eVY1u8='; style-src 'sha256-8gmjsYQFhCTchdB5E3BMRNoYgDnWDbkYcLwn7lfZtx8='; img-src blob:; connect-src https://ntfy.sh wss://broker.hivemq.com:8884 wss://broker.emqx.io:8084; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Wormhole</title>
+<style>
+:root{--bg:#fff;--fg:#1d1d1f;--mut:#6b6b73;--card:#f6f6f8;--line:#dcdce2;--acc:#0a6cff;--ok:#1f8a3b;--warn:#a15c00;--bad:#c62828;--code:#ececf1}
+@media (prefers-color-scheme:dark){:root{--bg:#141417;--fg:#ececf1;--mut:#9a9aa5;--card:#1e1e23;--line:#33333b;--acc:#5aa2ff;--ok:#2f9e52;--warn:#b8761a;--bad:#d64545;--code:#2a2a31}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:19px;margin:0 0 2px}.lead{color:var(--mut);margin:0 0 14px}
+h2{font-size:14px;margin:0 0 8px;display:flex;gap:8px;align-items:center}h3{font-size:12px;margin:0 0 4px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+a{color:var(--acc)}
+[hidden]{display:none!important}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.dev{display:flex;gap:10px;align-items:center}.dev svg{width:40px;height:40px;flex:none;border-radius:6px;background:var(--bg);border:1px solid var(--line)}
+.id{font:600 15px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.02em;word-break:break-all}
+.muted{color:var(--mut)}.msg{color:var(--warn);margin:8px 0 0;min-height:1em}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;padding:6px 12px;border-radius:7px;border:1px solid var(--acc);background:var(--acc);color:#fff;cursor:pointer}
+button.secondary{background:transparent;color:var(--acc)}button.danger{background:transparent;border-color:var(--bad);color:var(--bad)}
+button.small{padding:2px 8px;font-size:12px}
+button:disabled{opacity:.5;cursor:default}
+input[type=text]{font:inherit;padding:5px 8px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:14em;max-width:100%}
+.pill{font-size:12px;font-weight:400;padding:1px 9px;border-radius:10px;background:var(--line);color:var(--fg)}
+.pill.ok{background:var(--ok);color:#fff}.pill.warn{background:var(--warn);color:#fff}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center;font-size:12px;color:var(--mut)}
+#chans{display:inline-flex;gap:6px;flex-wrap:wrap}
+.chip{padding:1px 8px;border-radius:10px;background:var(--line);color:var(--fg)}.chip.up{background:var(--ok);color:#fff}.chip.connecting{background:var(--warn);color:#fff}.chip.down{background:var(--bad);color:#fff}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}@media (max-width:560px){.cmp{grid-template-columns:1fr}}
+.count{font:600 28px ui-monospace,monospace;margin:4px 0}
+#pairUrl{flex:1 1 18em;width:auto;min-width:0;font:12px ui-monospace,Menlo,Consolas,monospace}
+#qr{margin:10px 0}#qr svg{display:block;border-radius:6px;max-width:100%;height:auto}
+#drop{border:2px dashed var(--line);border-radius:10px;padding:28px 12px;text-align:center;cursor:pointer;color:var(--mut)}
+#drop.over,#drop:focus{border-color:var(--acc);outline:none;color:var(--fg)}
+progress{width:100%;margin:8px 0}
+.banner{background:var(--bad);color:#fff;border-radius:8px;padding:8px 12px;margin-bottom:12px}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;margin:10px 0 0}dt{color:var(--mut)}dd{margin:0;word-break:break-all}
+#log{background:#111;color:#cfe;padding:8px;border-radius:8px;max-height:240px;overflow:auto;font-size:12px;white-space:pre-wrap}
+#preview{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.pv-bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px;color:var(--mut)}
+.pv-img{display:block;max-width:100%;height:auto;border-radius:6px;background:var(--bg)}
+.pv-text{margin:0;white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;max-height:70vh;overflow:auto}
+.md{max-height:70vh;overflow:auto;word-break:break-word}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{display:block;margin:14px 0 6px;line-height:1.25;color:var(--fg);text-transform:none;letter-spacing:0}
+.md h1{font-size:20px}.md h2{font-size:17px}.md h3{font-size:15px}.md h4,.md h5,.md h6{font-size:14px}
+.md p{margin:0 0 10px}.md ul,.md ol{margin:0 0 10px;padding-left:22px}.md li>ul,.md li>ol{margin:0}
+.md blockquote{margin:0 0 10px;padding:2px 12px;border-left:3px solid var(--line);color:var(--mut)}
+.md code{font:12.5px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 4px;border-radius:4px}
+.md pre{background:var(--code);padding:8px 10px;border-radius:8px;overflow:auto;margin:0 0 10px}.md pre code{background:none;padding:0}
+.md hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+.md>:first-child{margin-top:0}.md>:last-child{margin-bottom:0}
+</style>
+</head>
+<body>
+<main>
+<h1>Wormhole</h1>
+<p class="lead">One file between two devices · browser to browser · end-to-end encrypted</p>
+<div id="banner" class="banner" hidden></div>
+
+<section class="card"><h2>This device</h2><div id="me" class="dev"></div></section>
+
+<section class="card" id="pairCard">
+  <h2>Pairing <span id="pairPill" class="pill">unpaired</span></h2>
+  <div id="vIdle">
+    <p><b>Existing device:</b> press “Pair new device”. It shows a link, a QR code and a pairing code.<br>
+       <b>New device:</b> open the link or scan the QR code. With only this HTML file, open it, type the pairing code and press “Join”.</p>
+    <p><label for="code">Pairing code (created for you; you can choose your own):</label>
+       <input id="code" type="text" maxlength="60" autocomplete="off" autocapitalize="none" spellcheck="false"></p>
+    <div class="row"><button id="btnPair">Pair new device</button><button id="btnJoin" class="secondary">Join (I am the new device)</button></div>
+  </div>
+  <div id="vHost" hidden>
+    <p id="hostStatus"></p><div class="count"><span id="count">–</span> s</div>
+    <div id="share">
+      <p>Pairing code: <b id="hostCode" class="id"></b></p>
+      <div id="shareLink">
+        <p class="muted">On the new device open this link or scan the QR code:</p>
+        <div class="row"><input id="pairUrl" type="text" readonly aria-label="Pairing link"><button id="btnCopy" class="secondary">Copy</button></div>
+        <div id="qr"></div>
+      </div>
+      <p id="noLink" class="muted" hidden>This page was opened from a file, so it has no web address to share. Send the HTML file to the new device, open it, type the pairing code and press “Join”. Put the file on a web server to get a link and a QR code.</p>
+    </div>
+    <button id="btnCancelHost" class="secondary">Cancel</button>
+  </div>
+  <div id="vJoin" hidden>
+    <p id="joinStatus">Looking for an open pairing window…</p>
+    <button id="btnCancelJoin" class="secondary">Cancel</button>
+  </div>
+  <div id="vCand" hidden>
+    <p>Compare the two ids on <b>both screens</b>. They must be the same on both devices: the offering device on the left, the joining device on the right.</p>
+    <div class="cmp">
+      <div><h3 id="lblOffer">Offering device</h3><div id="candOffer" class="dev"></div></div>
+      <div><h3 id="lblJoin">Joining device</h3><div id="candJoin" class="dev"></div></div>
+    </div>
+    <p>Time left: <b><span id="countCand">–</span> s</b></p>
+    <div class="row"><button id="btnTrust">IDs match – trust</button><button id="btnReject" class="danger">Reject</button></div>
+    <p id="candStatus" class="muted"></p>
+  </div>
+  <div id="vPaired" hidden>
+    <div class="row"><div id="peerDev" class="dev"></div><span id="onlinePill" class="pill">offline</span><button id="btnUnpair" class="secondary">Unpair</button></div>
+  </div>
+  <p id="pairMsg" class="msg" role="status"></p>
+  <div class="chips" id="chanRow" hidden><span>Signaling:</span><span id="chans"></span></div>
+</section>
+
+<section class="card" id="fileCard" hidden>
+  <h2>Shared file <span id="syncPill" class="pill"></span></h2>
+  <div id="drop" tabindex="0" role="button">Drop a file here or click · replaces the current file on both devices</div>
+  <input type="file" id="pick" hidden>
+  <progress id="prog" hidden value="0" max="1"></progress>
+  <p id="fileMsg" class="msg" role="status"></p>
+  <div id="fileInfo" class="muted">No file yet.</div>
+  <div id="preview" hidden></div>
+</section>
+
+<details><summary class="muted">Log</summary><pre id="log"></pre></details>
+</main>
+<script>
+const __m = Object.create(null);
+// ---- /apps/wormhole/src/config.js
+__m["/apps/wormhole/src/config.js"] = (function () {
+"use strict";
+
+
+const OVERRIDE = null;
+
+const DEFAULTS = {
+  secret: "wormhole-7c1f0e52-93ab-4d1e-8b76-2f5a9c3e6d14",
+
+  ntfy: ["https://ntfy.sh"],
+  mqtt: [
+    ["HiveMQ", "wss://broker.hivemq.com:8884/mqtt"],
+    ["EMQX", "wss://broker.emqx.io:8084/mqtt"],
+  ],
+
+  ice: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: ["turn:eu-0.turn.peerjs.com:3478", "turn:us-0.turn.peerjs.com:3478"], username: "peerjs", credential: "peerjsp" },
+  ],
+  icePolicy: "all", // "relay": always through TURN, the peer never sees your IP address
+
+  baseUrl: "",
+
+  windowMs: 90000, // how long "Pair new device" answers
+  joinMs: 60000, // how long "Join" looks for an open window
+  maxFile: 50 * 1024 * 1024, // everything is held in memory
+  maxText: 200 * 1024, // text shown in the page before "Show all"
+  partSize: 1800, // ntfy refuses messages over 4 KB
+  keepaliveMs: 45000, // presence check while the peer is online
+  offlineSteps: [2000, 5000, 15000, 30000, 60000, 120000], // pauses between hellos while it is not
+  connectMs: 45000, // give up on a transfer that does not start
+};
+
+const CONFIG = { ...DEFAULTS, ...(OVERRIDE ?? {}) };
+
+return { OVERRIDE, DEFAULTS, CONFIG };
+})();
+// ---- /framework/core/bytes.js
+__m["/framework/core/bytes.js"] = (function () {
+"use strict";
+
+
+const te = new TextEncoder();
+const td = new TextDecoder();
+
+function rand(n) {
+  const u = new Uint8Array(n);
+  for (let i = 0; i < n; i += 65536) globalThis.crypto.getRandomValues(u.subarray(i, Math.min(n, i + 65536))); // 64 KiB per call limit
+  return u;
+}
+
+const b64u = {
+  enc(buf) {
+    const u = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+    let s = "";
+    for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+    return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  },
+  dec(str) {
+    if (typeof str !== "string" || !/^[A-Za-z0-9_-]*$/.test(str)) throw new Error("Invalid base64url input");
+    const s = str.replace(/-/g, "+").replace(/_/g, "/");
+    const bin = atob(s + "=".repeat((4 - (s.length % 4)) % 4));
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  },
+};
+
+const utf8 = (s) => te.encode(s);
+const fromUtf8 = (b) => td.decode(b);
+
+const isB64 = (v, lo, hi) => typeof v === "string" && v.length >= lo && v.length <= hi && /^[A-Za-z0-9_-]+$/.test(v);
+
+function equalBytes(a, b) {
+  if (a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a[i] ^ b[i];
+  return d === 0;
+}
+
+function cat(...parts) {
+  const bufs = parts.map((p) => (typeof p === "string" ? te.encode(p) : p));
+  const out = new Uint8Array(bufs.reduce((n, p) => n + 4 + p.length, 0));
+  const dv = new DataView(out.buffer);
+  let o = 0;
+  for (const p of bufs) {
+    dv.setUint32(o, p.length);
+    o += 4;
+    out.set(p, o);
+    o += p.length;
+  }
+  return out;
+}
+
+function uncat(buf) {
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  const parts = [];
+  let o = 0;
+  while (o < buf.length) {
+    if (o + 4 > buf.length) throw new Error("Malformed data");
+    const n = dv.getUint32(o);
+    o += 4;
+    if (o + n > buf.length) throw new Error("Malformed data");
+    parts.push(buf.subarray(o, o + n));
+    o += n;
+  }
+  return parts;
+}
+
+function concatBytes(list) {
+  const out = new Uint8Array(list.reduce((n, p) => n + p.length, 0));
+  let o = 0;
+  for (const p of list) {
+    out.set(p, o);
+    o += p.length;
+  }
+  return out;
+}
+
+async function sha256(data) {
+  return new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", data));
+}
+const hashB64 = async (data) => b64u.enc(await sha256(data));
+const fingerprint = sha256; // of a public key (SPKI)
+function fpHex(fp) {
+  return Array.from(fp.subarray(0, 16), (b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .match(/.{4}/g)
+    .join("-");
+}
+
+
+function jcs(v) {
+  if (v === null || v === true || v === false) return String(v);
+  if (typeof v === "number") {
+    if (!Number.isSafeInteger(v)) throw new Error("Canonical JSON allows only safe integers.");
+    return String(v === 0 ? 0 : v); // -0 -> 0
+  }
+  if (typeof v === "string") return JSON.stringify(v);
+  if (Array.isArray(v)) return `[${v.map(jcs).join(",")}]`;
+  if (typeof v === "object" && (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null)) {
+    const keys = Object.keys(v).sort(); // UTF-16 code unit order, as RFC 8785 requires
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${jcs(v[k])}`).join(",")}}`;
+  }
+  throw new Error("Canonical JSON: unsupported value.");
+}
+const jcsBytes = (v) => te.encode(jcs(v));
+const jcsHash = (v) => hashB64(jcsBytes(v));
+
+function parseJson(bytes, what = "JSON") {
+  let v;
+  try {
+    v = JSON.parse(typeof bytes === "string" ? bytes : td.decode(bytes));
+    jcs(v);
+  } catch {
+    throw new Error(`Malformed ${what}.`);
+  }
+  return v;
+}
+
+
+async function pipe(bytes, stream) {
+  return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+}
+const gzip = (b) => pipe(b, new CompressionStream("gzip"));
+const gunzip = (b) => pipe(b, new DecompressionStream("gzip"));
+
+async function gunzipMax(bytes, max) {
+  const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip")).getReader();
+  const chunks = [];
+  let n = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    n += value.length;
+    if (n > max) {
+      await reader.cancel().catch(() => {});
+      throw new Error("The capsule is too large.");
+    }
+    chunks.push(value);
+  }
+  return concatBytes(chunks);
+}
+
+return { rand, b64u, utf8, fromUtf8, isB64, equalBytes, cat, uncat, concatBytes, sha256, hashB64, fingerprint, fpHex, jcs, jcsBytes, jcsHash, parseJson, gzip, gunzip, gunzipMax };
+})();
+// ---- /framework/core/crypto.js
+__m["/framework/core/crypto.js"] = (function () {
+"use strict";
+const { rand, b64u, cat, uncat, utf8, fromUtf8, sha256 } = __m["/framework/core/bytes.js"];
+
+
+
+const subtle = globalThis.crypto.subtle;
+const P256DH = { name: "ECDH", namedCurve: "P-256" };
+const P256SIG = { name: "ECDSA", namedCurve: "P-256" };
+const SIGALG = { name: "ECDSA", hash: "SHA-256" };
+
+const SUITE = 1;
+const MIN_SUITE = 1; // downgrade policy: nothing below this is accepted
+const PBKDF2_ITER = 600000;
+const MAX_RECIPIENTS = 16;
+
+const LABELS = {
+  frag: "cpsl/1/frag",
+  fsec: "cpsl/1/filespec-sec",
+  keyring: "cpsl/1/keyring",
+  wrap: "cpsl/1/wrap",
+  pwwrap: "cpsl/1/pw-wrap",
+  pwmix: "cpsl/1/pw-mix",
+  att: "cpsl/1/attachment",
+  seal: "cpsl/1/seal",
+  filespec: "cpsl/1/filespec",
+  link: "cpsl/1/sharespec-link",
+  revlist: "cpsl/1/revocations",
+  keystore: "cpsl/1/keystore",
+  signal: "cpsl/1/signal",
+  sub: "cpsl/1/sub",
+};
+
+
+async function hkdfBase(ikm, usage) {
+  if (ikm instanceof Uint8Array) return subtle.importKey("raw", ikm, "HKDF", false, [usage]);
+  return ikm; // a non-extractable HKDF CryptoKey
+}
+const hkdfParams = (info, salt = new Uint8Array(32)) => ({ name: "HKDF", hash: "SHA-256", salt, info: typeof info === "string" ? utf8(info) : info });
+
+async function hkdfBytes(ikm, info, len = 32, salt = undefined) {
+  return new Uint8Array(await subtle.deriveBits(hkdfParams(info, salt), await hkdfBase(ikm, "deriveBits"), len * 8));
+}
+async function hkdfAes(ikm, info, usages = ["encrypt", "decrypt"]) {
+  return subtle.deriveKey(hkdfParams(info), await hkdfBase(ikm, "deriveKey"), { name: "AES-GCM", length: 256 }, false, usages);
+}
+const importRootKey = (K) => subtle.importKey("raw", K, "HKDF", false, ["deriveKey", "deriveBits"]);
+const aesKey = (raw, usages = ["encrypt", "decrypt"]) => subtle.importKey("raw", raw, "AES-GCM", false, usages);
+
+async function gcmEnc(key, iv, aad, pt) {
+  return new Uint8Array(await subtle.encrypt({ name: "AES-GCM", iv, additionalData: aad }, key, pt));
+}
+async function gcmDec(key, iv, aad, ct) {
+  return new Uint8Array(await subtle.decrypt({ name: "AES-GCM", iv, additionalData: aad }, key, ct));
+}
+
+async function aeadSeal(key, aad, pt) {
+  const iv = rand(12);
+  const ct = await gcmEnc(key, iv, aad, pt);
+  const out = new Uint8Array(13 + ct.length);
+  out[0] = SUITE;
+  out.set(iv, 1);
+  out.set(ct, 13);
+  return out;
+}
+async function aeadOpen(key, aad, blob) {
+  if (!(blob instanceof Uint8Array) || blob.length < 13 + 16) throw new Error("Malformed encrypted object.");
+  if (blob[0] !== SUITE || blob[0] < MIN_SUITE) throw new Error(`Unknown cipher suite ${blob[0]}.`);
+  return gcmDec(key, blob.subarray(1, 13), aad, blob.subarray(13));
+}
+
+async function hmacKey(raw) {
+  return subtle.importKey("raw", raw, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+}
+async function hmac(key, data) {
+  return new Uint8Array(await subtle.sign("HMAC", key, data));
+}
+const hmacVerify = (key, mac, data) => subtle.verify("HMAC", key, mac, data);
+
+
+async function genIdentity(extractable = false) {
+  const dh = await subtle.generateKey(P256DH, extractable, ["deriveBits"]);
+  const sig = await subtle.generateKey(P256SIG, extractable, ["sign", "verify"]);
+  return {
+    dhPriv: dh.privateKey,
+    dhPub: new Uint8Array(await subtle.exportKey("spki", dh.publicKey)),
+    sigPriv: sig.privateKey,
+    sigPub: new Uint8Array(await subtle.exportKey("spki", sig.publicKey)),
+  };
+}
+
+async function exportIdentity(id) {
+  return { dh: await subtle.exportKey("jwk", id.dhPriv), sig: await subtle.exportKey("jwk", id.sigPriv) };
+}
+
+async function importIdentity(jwks, extractable = false) {
+  const pub = async (jwk, alg, usages) => {
+    const { d, key_ops, ...p } = jwk;
+    return new Uint8Array(await subtle.exportKey("spki", await subtle.importKey("jwk", { ...p, key_ops: usages }, alg, true, usages)));
+  };
+  return {
+    dhPriv: await subtle.importKey("jwk", { ...jwks.dh, key_ops: ["deriveBits"] }, P256DH, extractable, ["deriveBits"]),
+    dhPub: await pub(jwks.dh, P256DH, []),
+    sigPriv: await subtle.importKey("jwk", { ...jwks.sig, key_ops: ["sign"] }, P256SIG, extractable, ["sign"]),
+    sigPub: await pub(jwks.sig, P256SIG, ["verify"]),
+  };
+}
+
+async function spkiToJwk(spki, kind = "sig") {
+  const k = await subtle.importKey("spki", spki, kind === "sig" ? P256SIG : P256DH, true, kind === "sig" ? ["verify"] : []);
+  const { kty, crv, x, y } = await subtle.exportKey("jwk", k);
+  return { kty, crv, x, y };
+}
+async function jwkToSpki(jwk, kind = "sig") {
+  if (!jwk || jwk.kty !== "EC" || jwk.crv !== "P-256" || typeof jwk.x !== "string" || typeof jwk.y !== "string") throw new Error("Unsupported key.");
+  const k = await subtle.importKey("jwk", { kty: "EC", crv: "P-256", x: jwk.x, y: jwk.y }, kind === "sig" ? P256SIG : P256DH, true, kind === "sig" ? ["verify"] : []);
+  return new Uint8Array(await subtle.exportKey("spki", k));
+}
+
+async function sign(sigPriv, data) {
+  return new Uint8Array(await subtle.sign(SIGALG, sigPriv, data));
+}
+async function verify(sigPubSpki, sig, data) {
+  try {
+    const k = await subtle.importKey("spki", sigPubSpki, P256SIG, false, ["verify"]);
+    return await subtle.verify(SIGALG, k, sig, data);
+  } catch {
+    return false;
+  }
+}
+
+
+async function ecdhAes(priv, peerPubSpki, info, usages) {
+  const pub = await subtle.importKey("spki", peerPubSpki, P256DH, false, []);
+  const bits = new Uint8Array(await subtle.deriveBits({ name: "ECDH", public: pub }, priv, 256));
+  return hkdfAes(bits, info, usages);
+}
+
+async function eciesEnc(recvPub, label, aad, pt) {
+  const eph = await subtle.generateKey(P256DH, false, ["deriveBits"]);
+  const epk = new Uint8Array(await subtle.exportKey("spki", eph.publicKey));
+  const k = await ecdhAes(eph.privateKey, recvPub, cat(label, epk, recvPub), ["encrypt"]);
+  const iv = rand(12);
+  return { epk, iv, ct: await gcmEnc(k, iv, aad, pt) };
+}
+async function eciesDec(recvPriv, recvPub, label, aad, { epk, iv, ct }) {
+  const k = await ecdhAes(recvPriv, epk, cat(label, epk, recvPub), ["decrypt"]);
+  return gcmDec(k, iv, aad, ct);
+}
+
+async function sealTo(recvPub, bytes) {
+  const r = await eciesEnc(recvPub, LABELS.seal, new Uint8Array(0), bytes);
+  return b64u.enc(cat(r.epk, r.iv, r.ct));
+}
+async function unseal(recvPriv, recvPub, sealed) {
+  const [epk, iv, ct, extra] = uncat(b64u.dec(sealed));
+  if (!ct || extra) throw new Error("Malformed sealed message");
+  return eciesDec(recvPriv, recvPub, LABELS.seal, new Uint8Array(0), { epk, iv, ct });
+}
+const sealJson = (recvPub, obj) => sealTo(recvPub, utf8(JSON.stringify(obj)));
+async function unsealJson(identity, sealed) {
+  return JSON.parse(fromUtf8(await unseal(identity.dhPriv, identity.dhPub, sealed)));
+}
+
+
+const KDFS = {
+  async pbkdf2(pw, salt, kdf) {
+    if (!Number.isSafeInteger(kdf.iter) || kdf.iter < 100000 || kdf.iter > 1e8) throw new Error("Unsupported password scheme parameters.");
+    const base = await subtle.importKey("raw", pw, "PBKDF2", false, ["deriveBits"]);
+    return new Uint8Array(await subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: kdf.iter }, base, 256));
+  },
+};
+const KDF_DEFAULTS = { pbkdf2: () => ({ iter: PBKDF2_ITER }) };
+
+function registerKdf(alg, fn, defaults = () => ({})) {
+  if (!/^[a-z0-9]{2,16}$/.test(alg)) throw new Error("bad KDF id");
+  KDFS[alg] = fn;
+  KDF_DEFAULTS[alg] = defaults;
+}
+const kdfAvailable = (alg) => typeof KDFS[alg] === "function";
+
+const validKdf = (k) => !!k && typeof k.alg === "string" && /^[a-z0-9]{2,16}$/.test(k.alg) && typeof k.salt === "string" && /^[A-Za-z0-9_-]{22}$/.test(k.salt);
+
+function newKdf(alg = "pbkdf2") {
+  if (!KDFS[alg]) throw new Error(`Password scheme ${alg} is not available.`);
+  return { alg, ...KDF_DEFAULTS[alg](), salt: b64u.enc(rand(16)) };
+}
+
+async function kdfBytes(password, kdf) {
+  if (!validKdf(kdf)) throw new Error("Unknown password scheme.");
+  const fn = KDFS[kdf.alg];
+  if (!fn) throw new Error(`Password scheme ${kdf.alg} is not available in this app.`);
+  return fn(utf8(String(password).normalize("NFKC")), b64u.dec(kdf.salt), kdf);
+}
+async function deriveKek(password, kdf) {
+  return aesKey(await kdfBytes(password, kdf));
+}
+
+async function sealWithPassword(obj, password, label) {
+  const kdf = newKdf();
+  const ct = await aeadSeal(await deriveKek(password, kdf), utf8(label), utf8(JSON.stringify(obj)));
+  return { kdf, ct: b64u.enc(ct) };
+}
+async function openWithPassword(box, password, label) {
+  const key = await deriveKek(password, box.kdf);
+  try {
+    return JSON.parse(fromUtf8(await aeadOpen(key, utf8(label), b64u.dec(box.ct))));
+  } catch {
+    throw new Error("Wrong password, or the data is damaged.");
+  }
+}
+
+const thumbprint = async (pubSpki) => b64u.enc(await sha256(pubSpki));
+
+return { SUITE, MIN_SUITE, PBKDF2_ITER, MAX_RECIPIENTS, LABELS, hkdfBytes, hkdfAes, importRootKey, aesKey, gcmEnc, gcmDec, aeadSeal, aeadOpen, hmacKey, hmac, hmacVerify, genIdentity, exportIdentity, importIdentity, spkiToJwk, jwkToSpki, sign, verify, eciesEnc, eciesDec, sealTo, unseal, sealJson, unsealJson, registerKdf, kdfAvailable, validKdf, newKdf, kdfBytes, deriveKek, sealWithPassword, openWithPassword, thumbprint };
+})();
+// ---- /framework/core/keystore.js
+__m["/framework/core/keystore.js"] = (function () {
+"use strict";
+const { rand, b64u, cat, utf8 } = __m["/framework/core/bytes.js"];
+const { LABELS, aesKey, aeadSeal, aeadOpen, newKdf, deriveKek } = __m["/framework/core/crypto.js"];
+
+
+
+
+const META = "keystore";
+const MIN_PASSWORD = 8;
+
+function createKeystore(storage, { store = "keys", metaStore = "core" } = {}) {
+  let meta = null; // { mode: "device", mk: CryptoKey } | { mode: "password", kdf, wrapped }
+  let mk = null; // AES-GCM CryptoKey while unlocked
+  const aad = (id) => cat(LABELS.keystore, String(id));
+
+  async function load() {
+    if (meta) return;
+    meta = (await storage.get(metaStore, META)) ?? null;
+    if (!meta) {
+      const key = await globalThis.crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+      meta = { mode: "device", mk: key };
+      await storage.set(metaStore, META, meta);
+    }
+    if (meta.mode === "device") mk = meta.mk;
+  }
+  async function need() {
+    await load();
+    if (!mk) throw Object.assign(new Error("The key storage is locked. Enter its password first."), { locked: true });
+    return mk;
+  }
+
+  async function status() {
+    await load();
+    return { mode: meta.mode, locked: !mk };
+  }
+
+  async function unlock(password) {
+    await load();
+    if (meta.mode !== "password") return;
+    const kek = await deriveKek(password, meta.kdf);
+    let raw;
+    try {
+      raw = await aeadOpen(kek, utf8(LABELS.keystore), b64u.dec(meta.wrapped));
+    } catch {
+      throw new Error("Wrong password.");
+    }
+    mk = await aesKey(raw);
+  }
+  function lock() {
+    if (meta?.mode === "password") mk = null;
+  }
+
+  async function setPassword(password) {
+    const old = await need();
+    if (password !== null && String(password).length < MIN_PASSWORD) throw new Error(`Use at least ${MIN_PASSWORD} characters.`);
+    const entries = [];
+    for (const id of await storage.keys(store)) entries.push([id, await aeadOpen(old, aad(id), await storage.get(store, id))]);
+    let next;
+    let nextMeta;
+    if (password === null) {
+      next = await globalThis.crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+      nextMeta = { mode: "device", mk: next };
+    } else {
+      const raw = rand(32);
+      const kdf = newKdf();
+      next = await aesKey(raw);
+      nextMeta = { mode: "password", kdf, wrapped: b64u.enc(await aeadSeal(await deriveKek(password, kdf), utf8(LABELS.keystore), raw)) };
+    }
+    for (const [id, bytes] of entries) await storage.set(store, id, await aeadSeal(next, aad(id), bytes));
+    await storage.set(metaStore, META, nextMeta);
+    meta = nextMeta;
+    mk = next;
+  }
+
+  return {
+    status,
+    unlock,
+    lock,
+    setPassword,
+    async put(id, bytes) {
+      await storage.set(store, id, await aeadSeal(await need(), aad(id), bytes));
+    },
+    async get(id) {
+      const key = await need();
+      const blob = await storage.get(store, id);
+      if (!blob) return null;
+      try {
+        return await aeadOpen(key, aad(id), blob);
+      } catch {
+        throw new Error("A stored key is damaged.");
+      }
+    },
+    async has(id) {
+      return (await storage.get(store, id)) !== undefined;
+    },
+    del: (id) => storage.del(store, id),
+  };
+}
+
+return { MIN_PASSWORD, createKeystore };
+})();
+// ---- /framework/core/storage.js
+__m["/framework/core/storage.js"] = (function () {
+"use strict";
+
+
+const CORE_STORES = ["core", "files", "fragments", "keys", "versions"];
+
+function idbStorage(dbName, storeNames = CORE_STORES, version = 1) {
+  let dbp;
+  const open = () =>
+    (dbp ??= new Promise((resolve, reject) => {
+      const r = indexedDB.open(dbName, version);
+      r.onupgradeneeded = () => {
+        for (const s of storeNames) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s);
+      };
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+      r.onblocked = () => reject(new Error("IndexedDB is blocked by another tab"));
+    }));
+
+  const run = async (store, mode, fn) => {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const t = db.transaction(store, mode);
+      const req = fn(t.objectStore(store));
+      t.oncomplete = () => resolve(req.result);
+      t.onerror = () => reject(t.error);
+      t.onabort = () => reject(t.error ?? new Error("IndexedDB transaction aborted"));
+    });
+  };
+
+  return {
+    kind: "indexeddb",
+    get: (store, key) => run(store, "readonly", (os) => os.get(key)),
+    set: (store, key, value) => run(store, "readwrite", (os) => os.put(value, key)),
+    del: (store, key) => run(store, "readwrite", (os) => os.delete(key)),
+    keys: (store) => run(store, "readonly", (os) => os.getAllKeys()),
+    all: (store) => run(store, "readonly", (os) => os.getAll()),
+    clear: (store) => run(store, "readwrite", (os) => os.clear()),
+  };
+}
+
+function memoryStorage(storeNames = CORE_STORES) {
+  const stores = new Map(storeNames.map((s) => [s, new Map()]));
+  const st = (name) => {
+    const s = stores.get(name);
+    if (!s) throw new Error(`No such store: ${name}`);
+    return s;
+  };
+  return {
+    kind: "memory",
+    get: async (store, key) => st(store).get(key),
+    set: async (store, key, value) => void st(store).set(key, value),
+    del: async (store, key) => void st(store).delete(key),
+    keys: async (store) => [...st(store).keys()],
+    all: async (store) => [...st(store).values()],
+    clear: async (store) => st(store).clear(),
+  };
+}
+
+async function requestPersistence() {
+  const s = globalThis.navigator?.storage;
+  if (!s?.persist) return null;
+  return (await s.persisted?.()) || (await s.persist());
+}
+
+return { CORE_STORES, idbStorage, memoryStorage, requestPersistence };
+})();
+// ---- /framework/core/tar.js
+__m["/framework/core/tar.js"] = (function () {
+"use strict";
+
+
+const BLOCK = 512;
+const NAME_RE = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/;
+const te = new TextEncoder();
+
+const validTarName = (n) => typeof n === "string" && n.length >= 1 && n.length <= 100 && NAME_RE.test(n) && !n.split("/").some((s) => s === "." || s === "..");
+
+function header(name, size) {
+  const h = new Uint8Array(BLOCK);
+  const put = (s, o) => h.set(te.encode(s), o);
+  put(name, 0);
+  put("0000644\0", 100);
+  put("0000000\0", 108);
+  put("0000000\0", 116);
+  put(size.toString(8).padStart(11, "0") + "\0", 124);
+  put("00000000000\0", 136);
+  put("        ", 148); // checksum field counts as spaces
+  h[156] = 0x30; // regular file
+  put("ustar\0" + "00", 257);
+  let sum = 0;
+  for (const b of h) sum += b;
+  put(sum.toString(8).padStart(6, "0") + "\0 ", 148);
+  return h;
+}
+
+function tarPack(entries) {
+  const seen = new Set();
+  let total = 2 * BLOCK;
+  for (const e of entries) {
+    if (!validTarName(e.name) || seen.has(e.name)) throw new Error(`Bad or duplicate entry name: ${e.name}`);
+    if (e.bytes.length >= 2 ** 33) throw new Error("Entry too large.");
+    seen.add(e.name);
+    total += BLOCK + Math.ceil(e.bytes.length / BLOCK) * BLOCK;
+  }
+  const out = new Uint8Array(total);
+  let o = 0;
+  for (const e of entries) {
+    out.set(header(e.name, e.bytes.length), o);
+    o += BLOCK;
+    out.set(e.bytes, o);
+    o += Math.ceil(e.bytes.length / BLOCK) * BLOCK;
+  }
+  return out;
+}
+
+const str = (b, o, n) => {
+  let end = o;
+  while (end < o + n && b[end] !== 0) end++;
+  return String.fromCharCode.apply(null, b.subarray(o, end));
+};
+
+function tarUnpack(bytes, { maxEntries = 8192 } = {}) {
+  const out = new Map();
+  let o = 0;
+  for (;;) {
+    if (o + BLOCK > bytes.length) throw new Error("The archive is truncated.");
+    const h = bytes.subarray(o, o + BLOCK);
+    if (h.every((b) => b === 0)) break; // end marker
+    let sum = 0;
+    for (let i = 0; i < BLOCK; i++) sum += i >= 148 && i < 156 ? 32 : h[i];
+    const stored = parseInt(str(h, 148, 8).trim(), 8);
+    if (stored !== sum) throw new Error("The archive is damaged (checksum).");
+    const type = h[156];
+    if (type !== 0x30 && type !== 0) throw new Error("The archive holds an entry that is not a regular file.");
+    if (str(h, 345, 155) !== "") throw new Error("The archive uses an unsupported name format.");
+    const name = str(h, 0, 100);
+    if (!validTarName(name)) throw new Error("The archive holds an entry with a bad name.");
+    if (out.has(name)) throw new Error(`The archive holds “${name}” twice.`);
+    const sizeText = str(h, 124, 12).trim();
+    if (!/^[0-7]{1,11}$/.test(sizeText)) throw new Error("The archive is damaged (size).");
+    const size = parseInt(sizeText, 8);
+    o += BLOCK;
+    if (o + size > bytes.length) throw new Error("The archive is truncated.");
+    if (out.size >= maxEntries) throw new Error("The archive holds too many entries.");
+    out.set(name, bytes.subarray(o, o + size));
+    o += Math.ceil(size / BLOCK) * BLOCK;
+  }
+  return out;
+}
+
+return { validTarName, tarPack, tarUnpack };
+})();
+// ---- /framework/core/filespec.js
+__m["/framework/core/filespec.js"] = (function () {
+"use strict";
+const { rand, b64u, cat, fromUtf8, hashB64, jcs, jcsBytes, jcsHash, isB64, gzip, gunzip } = __m["/framework/core/bytes.js"];
+const { SUITE, LABELS, aesKey, aeadSeal, aeadOpen } = __m["/framework/core/crypto.js"];
+
+
+
+
+const FILESPEC_VERSION = 1;
+const FRAGMENT_SIZE = 256 * 1024;
+const MAX_FRAGMENTS = 4096;
+const MAX_FRAGMENT_BYTES = 512 * 1024 * 1024;
+const MAX_ATTACHMENTS = 8;
+const MAX_APP_JSON = 16 * 1024;
+
+const bad = (what) => {
+  throw new Error(`The capsule is malformed (${what}).`);
+};
+const isUrl = (u) => typeof u === "string" && u.length < 500 && /^https?:\/\/[^\s"'<>]+$/.test(u);
+const isFileId = (v) => isB64(v, 22, 22);
+const isHash = (v) => isB64(v, 43, 43);
+const newFileId = () => b64u.enc(rand(16));
+
+function validApp(o, max = MAX_APP_JSON) {
+  if (o === undefined) return true;
+  if (!o || typeof o !== "object" || Array.isArray(o)) return false;
+  try {
+    return jcs(o).length <= max;
+  } catch {
+    return false;
+  }
+}
+
+
+function splitFixed(bytes, size = FRAGMENT_SIZE) {
+  if (!Number.isSafeInteger(size) || size < 1) throw new Error("bad fragment size");
+  const out = [];
+  for (let o = 0; o < bytes.length; o += size) out.push(bytes.subarray(o, Math.min(bytes.length, o + size)));
+  return out.length ? out : [bytes.subarray(0, 0)];
+}
+
+function splitAt(bytes, offsets) {
+  const cuts = [0, ...offsets, bytes.length];
+  for (let i = 1; i < cuts.length; i++) if (!Number.isSafeInteger(cuts[i]) || cuts[i] < cuts[i - 1] || cuts[i] > bytes.length) throw new Error("Fragment offsets must be ascending and inside the file.");
+  return cuts.slice(1).map((end, i) => bytes.subarray(cuts[i], end));
+}
+
+
+const fragAad = (fileId, i) => cat(LABELS.frag, b64u.dec(fileId), String(i));
+
+async function encryptFragment(fileId, i, bytes, { compress = false } = {}) {
+  if (bytes.length > MAX_FRAGMENT_BYTES) throw new Error("Fragment too large.");
+  let body = bytes;
+  let z;
+  if (compress && bytes.length > 256) {
+    const packed = await gzip(bytes);
+    if (packed.length < bytes.length * 0.95) {
+      body = packed;
+      z = "gzip";
+    }
+  }
+  const k = rand(32);
+  const ct = await aeadSeal(await aesKey(k, ["encrypt"]), fragAad(fileId, i), body);
+  const key = { k: b64u.enc(k), size: bytes.length };
+  if (z) key.z = z;
+  return { ct, pub: { id: await hashB64(ct), size: ct.length }, key };
+}
+
+async function decryptFragment(fileId, i, ct, key, pub = null) {
+  if (!key) throw new Error(`You have no key for fragment ${i + 1}.`);
+  if (!ct) throw new Error(`Fragment ${i + 1} is not available.`);
+  if (pub && (await hashB64(ct)) !== pub.id) throw new Error(`Fragment ${i + 1} was modified.`);
+  let bytes;
+  try {
+    bytes = await aeadOpen(await aesKey(b64u.dec(key.k), ["decrypt"]), fragAad(fileId, i), ct);
+  } catch (e) {
+    throw new Error(/suite/.test(e.message) ? e.message : `Fragment ${i + 1} was modified or reordered.`);
+  }
+  if (key.z === "gzip") bytes = await gunzip(bytes);
+  else if (key.z) throw new Error("Unknown compression.");
+  if (bytes.length !== key.size) throw new Error("Size mismatch after decryption.");
+  return bytes;
+}
+
+
+const validAttName = (n) => typeof n === "string" && /^[a-z][a-z0-9-]{0,31}$/.test(n);
+const attAad = (fileId, name) => cat(LABELS.att, b64u.dec(fileId), name);
+
+async function sealAttachment(fileId, name, bytes) {
+  const k = rand(32);
+  return { ct: await aeadSeal(await aesKey(k, ["encrypt"]), attAad(fileId, name), bytes), k: b64u.enc(k) };
+}
+async function openAttachment(fileId, name, ct, k) {
+  try {
+    return await aeadOpen(await aesKey(b64u.dec(k), ["decrypt"]), attAad(fileId, name), ct);
+  } catch {
+    throw new Error(`The attachment “${name}” cannot be decrypted.`);
+  }
+}
+
+
+function validMeta(m) {
+  if (!m || typeof m !== "object" || Array.isArray(m)) return false;
+  const keys = Object.keys(m);
+  if (keys.length > 40) return false;
+  return keys.every((k) => /^[a-z][a-zA-Z0-9]{0,19}$/.test(k) && ((typeof m[k] === "string" && m[k].length <= 1000) || Number.isSafeInteger(m[k])));
+}
+
+function cleanMeta(meta) {
+  const out = {};
+  for (const [k, v] of Object.entries(meta ?? {})) {
+    if (v === undefined || v === null || v === "") continue;
+    out[k] = typeof v === "number" && !Number.isSafeInteger(v) ? String(v) : typeof v === "boolean" ? String(v) : v;
+  }
+  return out;
+}
+
+function validateFilespec(fs) {
+  if (!fs || fs.t !== "filespec" || fs.v !== FILESPEC_VERSION) bad("filespec version");
+  if (fs.suite !== SUITE) throw new Error(`Unknown cipher suite ${fs?.suite}.`);
+  if (!isFileId(fs.id)) bad("id");
+  if (!Number.isSafeInteger(fs.ver) || fs.ver < 1) bad("version number");
+  if (!validMeta(fs.meta)) bad("metadata");
+  if (fs.sec !== null && !isHash(fs.sec)) bad("secret part");
+  if (!Array.isArray(fs.fragments) || fs.fragments.length < 1 || fs.fragments.length > MAX_FRAGMENTS) bad("fragment list");
+  const ids = new Set();
+  for (const f of fs.fragments) {
+    if (!f || !isHash(f.id) || ids.has(f.id) || !Number.isSafeInteger(f.size) || f.size < 0 || (f.url !== undefined && !isUrl(f.url))) bad("fragment entry");
+    ids.add(f.id);
+  }
+  const att = fs.att ?? {};
+  if (typeof att !== "object" || Array.isArray(att) || Object.keys(att).length > MAX_ATTACHMENTS) bad("attachments");
+  for (const [name, a] of Object.entries(att)) {
+    if (!validAttName(name) || !a || !isHash(a.id) || !Number.isSafeInteger(a.size) || typeof a.enc !== "boolean" || (a.url !== undefined && !isUrl(a.url))) bad("attachment entry");
+  }
+  if (!validApp(fs.app)) bad("app data");
+  const known = ["t", "v", "suite", "id", "ver", "meta", "sec", "fragments", "att", "app"];
+  if (Object.keys(fs).some((k) => !known.includes(k))) bad("unknown filespec field");
+}
+
+const filespecId = (fs) => jcsHash(fs);
+const filespecBytes = (fs) => jcsBytes(fs);
+
+const secAad = (fileId, ver) => cat(LABELS.fsec, b64u.dec(fileId), String(ver));
+
+async function sealSecret(fileId, ver, obj) {
+  const fsk = rand(32);
+  return { ct: await aeadSeal(await aesKey(fsk, ["encrypt"]), secAad(fileId, ver), jcsBytes(obj)), fsk: b64u.enc(fsk) };
+}
+async function openSecret(fs, ct, fsk) {
+  if (!ct || !fsk) return null;
+  if ((await hashB64(ct)) !== fs.sec) throw new Error("The private part of the filespec was modified.");
+  try {
+    return JSON.parse(fromUtf8(await aeadOpen(await aesKey(b64u.dec(fsk), ["decrypt"]), secAad(fs.id, fs.ver), ct)));
+  } catch {
+    throw new Error("The private part of the filespec cannot be decrypted.");
+  }
+}
+
+const totalSize = (fs) => fs.fragments.reduce((n, f) => n + f.size, 0);
+
+return { FILESPEC_VERSION, FRAGMENT_SIZE, MAX_FRAGMENTS, MAX_FRAGMENT_BYTES, MAX_ATTACHMENTS, MAX_APP_JSON, isUrl, isFileId, isHash, newFileId, validApp, splitFixed, splitAt, encryptFragment, decryptFragment, validAttName, sealAttachment, openAttachment, validMeta, cleanMeta, validateFilespec, filespecId, filespecBytes, sealSecret, openSecret, totalSize };
+})();
+// ---- /framework/core/audience.js
+__m["/framework/core/audience.js"] = (function () {
+"use strict";
+const { rand, b64u, cat, utf8, fromUtf8, sha256, jcsBytes, fingerprint, isB64 } = __m["/framework/core/bytes.js"];
+const { LABELS, MAX_RECIPIENTS, eciesEnc, eciesDec, hkdfAes, hkdfBytes, kdfBytes, deriveKek, newKdf, validKdf, aeadSeal, aeadOpen } = __m["/framework/core/crypto.js"];
+const { validApp } = __m["/framework/core/filespec.js"];
+
+
+
+
+
+const AUDIENCE_KINDS = ["instance", "password", "external"];
+const MAX_AUDIENCES = 16;
+const MAX_KEYRING = 512 * 1024;
+
+const enc = b64u.enc;
+const dec = b64u.dec;
+const bad = (what) => {
+  throw new Error(`The capsule is malformed (${what}).`);
+};
+
+const wrapAad = (fileId, aid) => cat(LABELS.wrap, dec(fileId), aid);
+const pwAad = (fileId, aid) => cat(LABELS.pwwrap, dec(fileId), aid);
+const mixInfo = (fileId, aid) => cat(LABELS.pwmix, dec(fileId), aid);
+const keyringAad = async (fileId, ver, pub) => cat(LABELS.keyring, dec(fileId), String(ver), pub.aid, await sha256(jcsBytes(pub)));
+
+
+function validateAudiencePub(a) {
+  if (!a || !/^a[0-9]{1,2}$/.test(a.aid)) bad("audience id");
+  if (!AUDIENCE_KINDS.includes(a.kind)) bad("audience kind");
+  if (typeof a.pw !== "boolean") bad("password flag");
+  if (a.kind === "password" && a.pw) bad("double password");
+  if (a.grant !== undefined && !validApp(a.grant, 4096)) bad("grant");
+  if (a.to !== undefined && !validApp(a.to, 1024)) bad("audience pattern");
+  if (!validApp(a.app, 4096)) bad("audience app data");
+  const known = ["aid", "kind", "pw", "grant", "to", "app"];
+  if (Object.keys(a).some((k) => !known.includes(k))) bad("unknown audience field");
+}
+
+function validateAudienceSec(pub, s) {
+  if (!s || typeof s !== "object") bad("audience keys");
+  const one = (x) => x && isB64(x.f, 43, 43) && isB64(x.e, 80, 200) && isB64(x.i, 16, 16) && isB64(x.w, 40, 80);
+  if (pub.kind === "instance" && s.rcp !== undefined && !(Array.isArray(s.rcp) && s.rcp.length <= MAX_RECIPIENTS && s.rcp.every(one))) bad("instance wraps");
+  if (pub.kind === "password" && s.wk !== undefined && !(validKdf(s.kdf) && isB64(s.wk, 40, 120))) bad("password wrap");
+  if (pub.pw && !validKdf(s.mix)) bad("password layer");
+  if (!validApp(s.app, 4096)) bad("audience app keys");
+  if (!isB64(s.kr, 40, MAX_KEYRING)) bad("keyring");
+}
+
+
+async function makeAudience({ fileId, ver, aid, spec, keyring, pub: extra = {}, secApp }) {
+  if (!AUDIENCE_KINDS.includes(spec?.kind)) throw new Error("Unknown key delivery.");
+  const Ra = rand(32);
+  const layered = spec.kind !== "password" && !!spec.password;
+  const pub = { aid, kind: spec.kind, pw: layered };
+  for (const k of ["grant", "to", "app"]) if (extra[k] !== undefined) pub[k] = extra[k];
+  validateAudiencePub(pub);
+  const sec = {};
+  if (spec.kind === "instance") {
+    if (!spec.recipients?.length || spec.recipients.length > MAX_RECIPIENTS) throw new Error(`Choose between 1 and ${MAX_RECIPIENTS} devices.`);
+    sec.rcp = [];
+    for (const r of spec.recipients) {
+      const w = await eciesEnc(r.dh, LABELS.wrap, wrapAad(fileId, aid), Ra);
+      sec.rcp.push({ f: enc(await fingerprint(r.dh)), e: enc(w.epk), i: enc(w.iv), w: enc(w.ct) });
+    }
+  } else if (spec.kind === "password") {
+    if (!spec.password) throw new Error("A password is required.");
+    sec.kdf = newKdf(spec.kdf);
+    sec.wk = enc(await aeadSeal(await deriveKek(spec.password, sec.kdf), pwAad(fileId, aid), Ra));
+  }
+  let Ka = Ra;
+  if (layered) {
+    sec.mix = newKdf(spec.kdf);
+    Ka = await hkdfBytes(Ra, mixInfo(fileId, aid), 32, await kdfBytes(spec.password, sec.mix));
+  }
+  if (secApp !== undefined) sec.app = secApp;
+  const key = await hkdfAes(Ka, LABELS.keyring, ["encrypt"]);
+  sec.kr = enc(await aeadSeal(key, await keyringAad(fileId, ver, pub), utf8(JSON.stringify(keyring))));
+  validateAudienceSec(pub, sec);
+  return { pub, sec, secret: { aid, kind: spec.kind, Ra } };
+}
+
+
+async function instanceEntry(x, dhPub) {
+  const fp = enc(await fingerprint(dhPub));
+  return x.aud.kind === "instance" ? (x.sec.rcp ?? []).find((r) => r.f === fp) ?? null : null;
+}
+
+async function unwrapInstance(c, x, instance) {
+  const e = await instanceEntry(x, instance.dhPub);
+  if (!e) throw new Error("This capsule was encrypted for other devices.");
+  try {
+    return await eciesDec(instance.dhPriv, instance.dhPub, LABELS.wrap, wrapAad(c.fs.id, x.aud.aid), { epk: dec(e.e), iv: dec(e.i), ct: dec(e.w) });
+  } catch {
+    throw new Error("This device cannot unwrap the key.");
+  }
+}
+
+async function unwrapPassword(c, x, password) {
+  if (!password) throw new Error("This capsule needs a password.");
+  if (x.aud.kind !== "password" || !x.sec.wk) throw new Error("This copy holds no password-wrapped key.");
+  const kek = await deriveKek(password, x.sec.kdf); // its errors (unknown KDF) stay visible
+  try {
+    return await aeadOpen(kek, pwAad(c.fs.id, x.aud.aid), dec(x.sec.wk));
+  } catch {
+    throw new Error("Wrong password.");
+  }
+}
+
+const needsPassword = (aud) => aud.kind === "password" || aud.pw;
+const needsLayerPassword = (aud) => !!aud.pw;
+
+async function openKeyring(c, x, Ra, password) {
+  let Ka = Ra;
+  if (x.aud.pw) {
+    if (!password) throw new Error("This capsule needs a password.");
+    Ka = await hkdfBytes(Ra, mixInfo(c.fs.id, x.aud.aid), 32, await kdfBytes(password, x.sec.mix));
+  }
+  try {
+    const key = await hkdfAes(Ka, LABELS.keyring, ["decrypt"]);
+    return JSON.parse(fromUtf8(await aeadOpen(key, await keyringAad(c.fs.id, x.link.ver, x.aud), dec(x.sec.kr))));
+  } catch {
+    throw new Error(x.aud.pw ? "Wrong password." : "Wrong key, or the capsule was modified.");
+  }
+}
+
+return { AUDIENCE_KINDS, MAX_AUDIENCES, MAX_KEYRING, validateAudiencePub, validateAudienceSec, makeAudience, instanceEntry, unwrapInstance, unwrapPassword, needsPassword, needsLayerPassword, openKeyring };
+})();
+// ---- /framework/core/capsule.js
+__m["/framework/core/capsule.js"] = (function () {
+"use strict";
+const { utf8, fromUtf8, hashB64, jcsBytes, jcsHash, parseJson, gzip, gunzipMax, concatBytes, isB64 } = __m["/framework/core/bytes.js"];
+const { tarPack, tarUnpack } = __m["/framework/core/tar.js"];
+const { SUITE } = __m["/framework/core/crypto.js"];
+const { FILESPEC_VERSION, FRAGMENT_SIZE, MAX_FRAGMENTS, MAX_ATTACHMENTS, newFileId, isFileId, isHash, validApp, validAttName, splitFixed, encryptFragment, decryptFragment, sealAttachment, openAttachment, validateFilespec, filespecId, cleanMeta, sealSecret, openSecret } = __m["/framework/core/filespec.js"];
+const { MAX_AUDIENCES, validateAudiencePub, validateAudienceSec, makeAudience, instanceEntry } = __m["/framework/core/audience.js"];
+
+
+
+
+
+
+
+const CAPSULE_EXT = ".cpsl";
+const CAPSULE_MIME = "application/x-cpsl";
+const MAX_LINKS = 6; // the sender's link + at most 5 forwards
+const MAX_CAPSULE_BYTES = 600 * 1024 * 1024; // unpacked; decoding is fully in memory
+const MAX_SPEC_BYTES = 2 * 1024 * 1024; // each JSON entry
+
+const F = {
+  fs: "filespec-pub.json",
+  sec: "filespec-sec.enc",
+  sig: "filespec.sig",
+  links: "sharespec-pub.json",
+  keys: "sharespec-sec.enc",
+  frag: "fragments/",
+  att: "attachments/",
+};
+
+const bad = (what) => {
+  throw new Error(`The capsule is malformed (${what}).`);
+};
+
+const isCapsule = (bytes) => bytes instanceof Uint8Array && bytes.length > 20 && bytes[0] === 0x1f && bytes[1] === 0x8b;
+
+
+function validateLink(l) {
+  if (!l || l.t !== "sharespec" || l.v !== FILESPEC_VERSION) bad("sharespec version");
+  if (!isFileId(l.id) || !Number.isSafeInteger(l.ver) || l.ver < 1 || !isHash(l.fs)) bad("sharespec binding");
+  if (l.parent !== null && !isHash(l.parent)) bad("sharespec parent");
+  if ((l.parent === null) !== (l.from === null)) bad("sharespec parent");
+  if (l.from !== null && !/^a[0-9]{1,2}$/.test(l.from)) bad("sharespec parent");
+  if (!Array.isArray(l.audiences) || l.audiences.length < 1 || l.audiences.length > MAX_AUDIENCES) bad("audience list");
+  const ids = new Set();
+  for (const a of l.audiences) {
+    validateAudiencePub(a);
+    if (ids.has(a.aid)) bad("audience id");
+    ids.add(a.aid);
+  }
+  if (l.by !== undefined && !(l.by && typeof l.by.name === "string" && l.by.name.length <= 64 && isB64(l.by.spub, 80, 200) && (l.by.sdh === undefined || isB64(l.by.sdh, 80, 200)))) bad("sharespec signer");
+  if (!validApp(l.app)) bad("sharespec app data");
+  if (l.sig !== undefined && !(typeof l.sig === "string" && /^[A-Za-z0-9_.-]{40,400}$/.test(l.sig))) bad("sharespec signature");
+  const known = ["t", "v", "id", "ver", "fs", "parent", "from", "audiences", "by", "app", "sig"];
+  if (Object.keys(l).some((k) => !known.includes(k))) bad("unknown sharespec field");
+}
+
+function linkBody(link) {
+  const { sig, ...body } = link;
+  return body;
+}
+const linkHash = (link) => jcsHash(linkBody(link));
+
+async function checkStructure(c) {
+  validateFilespec(c.fs);
+  if (c.fsId !== (await filespecId(c.fs))) bad("filespec id");
+  if (c.fs.sec === null ? c.sec !== null : c.sec && (await hashB64(c.sec)) !== c.fs.sec) throw new Error("The private part of the filespec was modified.");
+  if (!Array.isArray(c.links) || c.links.length < 1 || c.links.length > MAX_LINKS) bad("chain length");
+  if (!Array.isArray(c.keys) || c.keys.length !== c.links.length) bad("key list");
+  for (let i = 0; i < c.links.length; i++) {
+    const l = c.links[i];
+    validateLink(l);
+    if (l.id !== c.fs.id || l.ver !== c.fs.ver || l.fs !== c.fsId) throw new Error("A sharespec does not belong to this filespec.");
+    if (i === 0 ? l.parent !== null : l.parent !== (await linkHash(c.links[i - 1]))) throw new Error("The sharespec chain is broken.");
+    if (i > 0 && !c.links[i - 1].audiences.some((a) => a.aid === l.from)) throw new Error("A forward refers to an unknown audience.");
+    const ks = c.keys[i];
+    if (!ks || typeof ks !== "object" || Array.isArray(ks)) bad("key list");
+    for (const aid of Object.keys(ks)) {
+      const pub = l.audiences.find((a) => a.aid === aid);
+      if (!pub) bad("keys for an unknown audience");
+      validateAudienceSec(pub, ks[aid]);
+    }
+  }
+  if (!Array.isArray(c.fragments) || c.fragments.length !== c.fs.fragments.length) bad("fragment count");
+  for (let i = 0; i < c.fragments.length; i++) if (c.fragments[i] && (await hashB64(c.fragments[i])) !== c.fs.fragments[i].id) throw new Error(`Fragment ${i + 1} was modified.`);
+  for (const [name, b] of Object.entries(c.attachments ?? {})) {
+    const a = c.fs.att?.[name];
+    if (!a) bad("unknown attachment");
+    if ((await hashB64(b)) !== a.id) throw new Error(`The attachment “${name}” was modified.`);
+  }
+}
+
+
+async function packCapsule(c) {
+  const entries = [{ name: F.fs, bytes: jcsBytes(c.fs) }];
+  if (c.sec) entries.push({ name: F.sec, bytes: c.sec });
+  if (c.sig) entries.push({ name: F.sig, bytes: jcsBytes(c.sig) });
+  entries.push({ name: F.links, bytes: jcsBytes({ t: "sharespec", v: FILESPEC_VERSION, links: c.links }) });
+  entries.push({ name: F.keys, bytes: jcsBytes({ t: "sharespec-sec", v: FILESPEC_VERSION, links: c.keys }) });
+  for (const [name, b] of Object.entries(c.attachments ?? {})) entries.push({ name: F.att + name, bytes: b });
+  c.fragments.forEach((b, i) => b && entries.push({ name: F.frag + c.fs.fragments[i].id, bytes: b }));
+  return gzip(tarPack(entries));
+}
+
+async function unpackCapsule(bytes, { maxBytes = MAX_CAPSULE_BYTES } = {}) {
+  if (!isCapsule(bytes)) throw new Error("Not a capsule (.cpsl) file.");
+  let files;
+  try {
+    files = tarUnpack(await gunzipMax(bytes, maxBytes), { maxEntries: MAX_FRAGMENTS + MAX_ATTACHMENTS + 8 });
+  } catch (e) {
+    throw new Error(/too large/.test(e.message) ? e.message : `The capsule is damaged or truncated (${e.message})`);
+  }
+  const json = (name, required = true) => {
+    const b = files.get(name);
+    if (!b) return required ? bad(`${name} is missing`) : null;
+    if (b.length > MAX_SPEC_BYTES) bad(`${name} is too large`);
+    return parseJson(b, name);
+  };
+  const fs = json(F.fs);
+  validateFilespec(fs);
+  const lp = json(F.links);
+  const ks = json(F.keys);
+  if (lp.t !== "sharespec" || lp.v !== FILESPEC_VERSION || ks.t !== "sharespec-sec" || ks.v !== FILESPEC_VERSION) bad("sharespec version");
+  const c = {
+    fs,
+    fsId: await filespecId(fs),
+    sec: files.get(F.sec)?.slice() ?? null,
+    sig: json(F.sig, false),
+    links: lp.links,
+    keys: ks.links,
+    fragments: fs.fragments.map((f) => files.get(F.frag + f.id)?.slice() ?? null),
+    attachments: {},
+  };
+  for (const name of Object.keys(fs.att ?? {})) if (files.has(F.att + name)) c.attachments[name] = files.get(F.att + name).slice();
+  const expected = new Set([F.fs, F.sec, F.sig, F.links, F.keys, ...fs.fragments.map((f) => F.frag + f.id), ...Object.keys(fs.att ?? {}).map((n) => F.att + n)]);
+  for (const name of files.keys()) if (!expected.has(name)) bad(`unexpected entry ${name}`);
+  await checkStructure(c);
+  return c;
+}
+
+
+function audiences(c) {
+  const out = [];
+  for (let li = c.links.length - 1; li >= 0; li--) for (const aud of c.links[li].audiences) out.push({ li, link: c.links[li], aud, sec: c.keys[li]?.[aud.aid] ?? {} });
+  return out;
+}
+const findAudience = (c, li, aid) => audiences(c).find((x) => x.li === li && x.aud.aid === aid) ?? null;
+
+async function instanceAudience(c, dhPub) {
+  for (const x of audiences(c)) if (await instanceEntry(x, dhPub)) return x;
+  return null;
+}
+
+
+function keyringFor(a, { fsk, fragKeys, attKeys }) {
+  const frags = {};
+  for (const i of a.frags ?? Object.keys(fragKeys).map(Number)) {
+    if (!fragKeys[i]) throw new Error(`There is no key for fragment ${i + 1} on this path.`);
+    frags[i] = fragKeys[i];
+  }
+  const kr = { frags };
+  if (fsk && a.private !== false) kr.fsk = fsk;
+  const att = {};
+  for (const name of a.attachments ?? Object.keys(attKeys)) if (attKeys[name]) att[name] = attKeys[name];
+  if (Object.keys(att).length) kr.att = att;
+  if (a.keyring !== undefined) kr.app = a.keyring;
+  return kr;
+}
+
+async function makeAudiences({ fileId, ver, list, keys }) {
+  if (!list?.length || list.length > MAX_AUDIENCES) throw new Error("Choose at least one recipient.");
+  const pubs = [];
+  const secs = {};
+  const secrets = [];
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i];
+    const aid = `a${i + 1}`;
+    const r = await makeAudience({ fileId, ver, aid, spec: a.spec, keyring: keyringFor(a, keys), pub: { grant: a.grant, to: a.to, app: a.app }, secApp: a.secApp });
+    pubs.push(r.pub);
+    secs[aid] = r.sec;
+    secrets.push(r.secret);
+  }
+  return { pubs, secs, secrets };
+}
+
+async function createCapsule({ id, ver = 1, meta = {}, publicKeys = [], parents = [], secret, fragments, bytes, json, fragmentSize = FRAGMENT_SIZE, compress = false, attachments = {}, audiences: list, app, link = {}, storage = null, now = Date.now() }) {
+  const fileId = id ?? newFileId();
+  if (!isFileId(fileId)) throw new Error("The file id must be 16 random bytes (base64url).");
+  if (json !== undefined) bytes = utf8(JSON.stringify(json));
+  const plain = fragments?.map((f) => f.bytes) ?? (bytes ? splitFixed(bytes, fragmentSize) : null);
+  if (!plain?.length || plain.length > MAX_FRAGMENTS) throw new Error(`Between 1 and ${MAX_FRAGMENTS} fragments.`);
+  if (!Array.isArray(parents) || parents.some((p) => !isHash(p))) throw new Error("bad parent list");
+
+  const blobs = [];
+  const fragOut = [];
+  for (let i = 0; i < plain.length; i++) fragOut.push(await encryptFragment(fileId, i, plain[i], { compress: typeof compress === "function" ? compress(i) : compress }));
+
+  const full = cleanMeta(json !== undefined ? { type: "application/json", ...meta } : meta);
+  const pubSet = new Set(publicKeys);
+  const secObj = { meta: full, parents, created: now };
+  if (secret !== undefined) secObj.app = secret;
+  const sealed = await sealSecret(fileId, ver, secObj);
+
+  const fs = { t: "filespec", v: FILESPEC_VERSION, suite: SUITE, id: fileId, ver, meta: Object.fromEntries(Object.entries(full).filter(([k]) => pubSet.has(k))), sec: await hashB64(sealed.ct), fragments: [] };
+  fs.fragments = fragOut.map((f) => {
+    const e = { ...f.pub };
+    if (storage?.fragments) {
+      e.url = storage.url(f.pub.id);
+      blobs.push({ id: f.pub.id, bytes: f.ct });
+    }
+    return e;
+  });
+  const attKeys = {};
+  const attBytes = {};
+  if (Object.keys(attachments).length) fs.att = {};
+  for (const [name, a] of Object.entries(attachments)) {
+    if (!validAttName(name)) throw new Error(`Bad attachment name: ${name}`);
+    let b = a.bytes;
+    if (a.encrypt) {
+      const r = await sealAttachment(fileId, name, a.bytes);
+      b = r.ct;
+      attKeys[name] = r.k;
+    }
+    const e = { id: await hashB64(b), size: b.length, enc: !!a.encrypt };
+    if (storage?.attachments?.includes(name)) {
+      e.url = storage.url(e.id);
+      blobs.push({ id: e.id, bytes: b });
+    } else attBytes[name] = b;
+    fs.att[name] = e;
+  }
+  if (app !== undefined) fs.app = app;
+  validateFilespec(fs);
+  const fsId = await filespecId(fs);
+
+  const fragKeys = Object.fromEntries(fragOut.map((f, i) => [i, f.key]));
+  const made = await makeAudiences({ fileId, ver, list, keys: { fsk: sealed.fsk, fragKeys, attKeys } });
+  const root = { t: "sharespec", v: FILESPEC_VERSION, id: fileId, ver, fs: fsId, parent: null, from: null, audiences: made.pubs };
+  if (link.by !== undefined) root.by = link.by;
+  if (link.app !== undefined) root.app = link.app;
+  validateLink(root);
+  const c = { fs, fsId, sec: sealed.ct, sig: null, links: [root], keys: [made.secs], fragments: fragOut.map((f) => (storage?.fragments ? null : f.ct)), attachments: attBytes };
+  return { c, secrets: made.secrets, blobs, fsk: sealed.fsk, fragKeys, attKeys };
+}
+
+
+const openFilespecSecret = (c, keyring) => openSecret(c.fs, c.sec, keyring?.fsk);
+
+async function decryptFragmentOf(c, i, keyring, ct = c.fragments[i]) {
+  const pub = c.fs.fragments[i];
+  if (!pub) throw new Error(`There is no fragment ${i + 1}.`);
+  if (!ct) throw new Error(`Fragment ${i + 1} is not in this capsule${pub.url ? " (it is in storage)" : ""}.`);
+  return decryptFragment(c.fs.id, i, ct, keyring.frags?.[i], pub);
+}
+
+async function decryptContent(c, keyring) {
+  const parts = [];
+  for (let i = 0; i < c.fs.fragments.length; i++) parts.push(await decryptFragmentOf(c, i, keyring));
+  return concatBytes(parts);
+}
+const decryptJson = async (c, keyring) => JSON.parse(fromUtf8(await decryptContent(c, keyring)));
+
+async function readAttachment(c, name, { keyring = null, bytes = c.attachments?.[name], key } = {}) {
+  const a = c.fs.att?.[name];
+  if (!a || !bytes) return null;
+  if ((await hashB64(bytes)) !== a.id) throw new Error(`The attachment “${name}” was modified.`);
+  if (!a.enc) return bytes;
+  const k = key ?? keyring?.att?.[name];
+  return k ? openAttachment(c.fs.id, name, bytes, k) : null;
+}
+
+
+async function forwardCapsule(c, { from, keyring, audiences: list, link = {} }) {
+  const parent = c.links[from.li];
+  if (!parent || !parent.audiences.some((a) => a.aid === from.aid)) throw new Error("Unknown audience.");
+  if (from.li + 2 > MAX_LINKS) throw new Error("This capsule has been forwarded too often.");
+  const made = await makeAudiences({ fileId: c.fs.id, ver: c.fs.ver, list: list.map((a) => ({ ...a, private: a.private !== false && !!keyring.fsk })), keys: { fsk: keyring.fsk, fragKeys: keyring.frags ?? {}, attKeys: keyring.att ?? {} } });
+  const next = { t: "sharespec", v: FILESPEC_VERSION, id: c.fs.id, ver: c.fs.ver, fs: c.fsId, parent: await linkHash(parent), from: from.aid, audiences: made.pubs };
+  if (link.by !== undefined) next.by = link.by;
+  if (link.app !== undefined) next.app = link.app;
+  validateLink(next);
+  const keep = new Set(list.flatMap((a) => a.frags ?? Object.keys(keyring.frags ?? {}).map(Number)));
+  const out = { fs: c.fs, fsId: c.fsId, sec: c.sec, sig: c.sig, links: [...c.links.slice(0, from.li + 1), next], keys: [...c.keys.slice(0, from.li + 1), made.secs], fragments: c.fragments.map((f, i) => (keep.has(i) ? f : null)), attachments: { ...c.attachments } };
+  return { c: out, secrets: made.secrets };
+}
+
+
+const withoutFragments = (c) => ({ ...c, fragments: c.fragments.map(() => null) });
+const specOnly = (c) => ({ ...c, fragments: c.fragments.map(() => null), attachments: {} });
+
+async function attachParts(c, { fragments = {}, attachments = {} }) {
+  const out = { ...c, fragments: [...c.fragments], attachments: { ...c.attachments } };
+  for (const [i, b] of Object.entries(fragments)) if (b && c.fs.fragments[i] && (await hashB64(b)) === c.fs.fragments[i].id) out.fragments[i] = b;
+  for (const [name, b] of Object.entries(attachments)) if (b && c.fs.att?.[name] && (await hashB64(b)) === c.fs.att[name].id) out.attachments[name] = b;
+  return out;
+}
+
+function dropPasswordWrap(c, li, aid) {
+  const e = c.keys[li]?.[aid];
+  if (!e?.wk) return c;
+  const { wk, kdf, ...rest } = e;
+  return { ...c, keys: c.keys.map((k, i) => (i === li ? { ...k, [aid]: rest } : k)) };
+}
+
+const missingFragments = (c) => c.fs.fragments.map((f, i) => (c.fragments[i] ? null : { i, id: f.id, url: f.url ?? null })).filter(Boolean);
+const capsuleName = (c, fallback = "file") => `${String(c.fs.meta.name ?? fallback).replace(/\.[^.]+$/, "").replace(/[^\w.-]+/g, "_").slice(0, 40) || fallback}-${c.fs.id.slice(0, 4)}${CAPSULE_EXT}`;
+
+return { CAPSULE_EXT, CAPSULE_MIME, MAX_LINKS, MAX_CAPSULE_BYTES, MAX_SPEC_BYTES, isCapsule, validateLink, linkBody, linkHash, checkStructure, packCapsule, unpackCapsule, audiences, findAudience, instanceAudience, createCapsule, openFilespecSecret, decryptFragmentOf, decryptContent, decryptJson, readAttachment, forwardCapsule, withoutFragments, specOnly, attachParts, dropPasswordWrap, missingFragments, capsuleName };
+})();
+// ---- /framework/core/index.js
+__m["/framework/core/index.js"] = (function () {
+"use strict";
+const { b64u, fingerprint, fromUtf8 } = __m["/framework/core/bytes.js"];
+const { genIdentity } = __m["/framework/core/crypto.js"];
+const { createKeystore } = __m["/framework/core/keystore.js"];
+const { requestPersistence } = __m["/framework/core/storage.js"];
+const { createCapsule, packCapsule, unpackCapsule, audiences, findAudience, instanceAudience, decryptFragmentOf, openFilespecSecret, specOnly, dropPasswordWrap } = __m["/framework/core/capsule.js"];
+const { unwrapInstance, unwrapPassword, openKeyring } = __m["/framework/core/audience.js"];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const FRAMEWORK_VERSION = "0.5.0";
+
+function createCore({ storage, plugins = [] } = {}) {
+  if (!storage) throw new Error("createCore needs a storage backend (idbStorage or memoryStorage).");
+  const keys = createKeystore(storage);
+  const hooks = { verify: [], imported: [] };
+  const mods = {};
+  let inst = null;
+
+  const instance = {
+    async load() {
+      inst ??= (await storage.get("core", "instance")) ?? null;
+      return inst;
+    },
+    async ensure() {
+      if (await instance.load()) return inst;
+      inst = { ...(await genIdentity(false)), created: Date.now() };
+      await storage.set("core", "instance", inst);
+      return inst;
+    },
+    async set(identity) {
+      inst = identity;
+      await storage.set("core", "instance", inst);
+    },
+    async id() {
+      return b64u.enc(await fingerprint((await instance.ensure()).dhPub));
+    },
+    async publicKeys() {
+      const i = await instance.ensure();
+      return { dh: i.dhPub, sig: i.sigPub };
+    },
+  };
+
+  const keyId = (fileId) => `aud:${fileId}`;
+  const files = {
+    async put(c, { access = null, key = null } = {}) {
+      for (let i = 0; i < c.fragments.length; i++) if (c.fragments[i]) await storage.set("fragments", c.fs.fragments[i].id, c.fragments[i]);
+      await storage.set("files", c.fs.id, { c: { ...c, fragments: c.fragments.map(() => null) }, access, at: Date.now() });
+      if (key) await keys.put(keyId(c.fs.id), key);
+    },
+    async record(fileId) {
+      return (await storage.get("files", fileId)) ?? null;
+    },
+    async get(fileId, { fragments = true } = {}) {
+      const rec = await files.record(fileId);
+      if (!rec) return null;
+      return fragments ? files.fill(rec.c) : rec.c;
+    },
+    async fill(c) {
+      const out = { ...c, fragments: [...c.fragments] };
+      for (let i = 0; i < out.fragments.length; i++) out.fragments[i] ??= (await storage.get("fragments", c.fs.fragments[i].id)) ?? null;
+      return out;
+    },
+    fragment: async (id) => (await storage.get("fragments", id)) ?? null,
+    putFragment: (id, bytes) => storage.set("fragments", id, bytes),
+    list: async () => (await storage.all("files")).map((r) => ({ id: r.c.fs.id, ver: r.c.fs.ver, fsId: r.c.fsId, meta: r.c.fs.meta, at: r.at })),
+    async delete(fileId, { keepKey = false } = {}) {
+      await storage.del("files", fileId);
+      if (!keepKey) await keys.del(keyId(fileId));
+      await files.collect();
+    },
+    async dropFragments(fileId) {
+      const rec = await files.record(fileId);
+      if (!rec) return;
+      await storage.set("files", fileId, { ...rec, dropped: true });
+      await files.collect();
+    },
+    async collect() {
+      const live = new Set();
+      for (const r of await storage.all("files")) if (!r.dropped) for (const f of r.c.fs.fragments) live.add(f.id);
+      for (const r of await storage.all("versions")) for (const id of r.fragments ?? []) live.add(id);
+      let n = 0;
+      for (const id of await storage.keys("fragments")) {
+        if (live.has(id)) continue;
+        await storage.del("fragments", id);
+        n++;
+      }
+      return n;
+    },
+  };
+
+
+  async function encrypt({ recipients = [], audiences: list, ...rest }) {
+    const me = await instance.ensure();
+    const auds = list ?? [{ spec: { kind: "instance", recipients: [{ dh: me.dhPub }, ...recipients] } }];
+    return createCapsule({ ...rest, audiences: auds });
+  }
+
+  async function unlock(c, { password, key } = {}) {
+    const rec = await files.record(c.fs.id);
+    let x = rec?.access ? findAudience(c, rec.access.li, rec.access.aid) : null;
+    let Ra = key ?? null;
+    if (!Ra && x && rec.c.fsId === c.fsId) Ra = await keys.get(keyId(c.fs.id));
+    if (!Ra) {
+      const me = await instance.load();
+      x = me ? await instanceAudience(c, me.dhPub) : null;
+      if (x) Ra = await unwrapInstance(c, x, me);
+      else {
+        x = audiences(c).find((a) => a.aud.kind === "password" && a.sec.wk) ?? null;
+        if (!x) throw new Error("This capsule is not for this instance.");
+        Ra = await unwrapPassword(c, x, password);
+      }
+    }
+    return { x, Ra, keyring: await openKeyring(c, x, Ra, password) };
+  }
+
+  async function decrypt(cOrId, opts = {}) {
+    const c = typeof cOrId === "string" ? await files.get(cOrId) : await files.fill(cOrId);
+    if (!c) throw new Error("No such file.");
+    const { keyring } = await unlock(c, opts);
+    const parts = [];
+    for (let i = 0; i < c.fs.fragments.length; i++) parts.push(await decryptFragmentOf(c, i, keyring));
+    const bytes = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    let o = 0;
+    for (const p of parts) {
+      bytes.set(p, o);
+      o += p.length;
+    }
+    const secret = await openFilespecSecret(c, keyring);
+    const meta = secret?.meta ?? c.fs.meta;
+    const out = { bytes, meta, secret, keyring, c };
+    if (meta.type === "application/json") out.json = JSON.parse(fromUtf8(bytes));
+    return out;
+  }
+
+
+  async function verify(c) {
+    const problems = [];
+    for (const fn of hooks.verify) problems.push(...((await fn(c)) ?? []));
+    return problems;
+  }
+
+  async function exportCapsule(cOrId, { fragments = true } = {}) {
+    const c = typeof cOrId === "string" ? await files.get(cOrId, { fragments }) : fragments ? await files.fill(cOrId) : cOrId;
+    if (!c) throw new Error("No such file.");
+    return packCapsule(fragments ? c : specOnly(c));
+  }
+
+  async function importCapsule(bytes, { password, store = true } = {}) {
+    const c = await unpackCapsule(bytes);
+    const problems = await verify(c);
+    let access = null;
+    let key = null;
+    try {
+      const u = await unlock(c, { password });
+      access = { li: u.x.li, aid: u.x.aud.aid };
+      key = u.Ra;
+    } catch {
+      /* stored without access: spec and public metadata stay readable */
+    }
+    const kept = access ? dropPasswordWrap(c, access.li, access.aid) : c;
+    if (store && !problems.length) {
+      await files.put(kept, { access, key });
+      for (const fn of hooks.imported) await fn(kept);
+    }
+    return { c: kept, problems, access };
+  }
+
+  const core = { storage, keys, instance, files, hooks, encrypt, decrypt, unlock, verify, exportCapsule, importCapsule, persist: requestPersistence, mod: (name) => mods[name] };
+
+  core.use = (plugin) => {
+    if (!plugin?.name || typeof plugin.install !== "function") throw new Error("A plugin needs a name and install(core).");
+    if (mods[plugin.name]) throw new Error(`Plugin ${plugin.name} is already installed.`);
+    mods[plugin.name] = plugin.install(core) ?? {};
+    return core;
+  };
+  for (const p of plugins) core.use(p);
+  return core;
+}
+
+return { ...__m["/framework/core/bytes.js"], ...__m["/framework/core/crypto.js"], ...__m["/framework/core/tar.js"], ...__m["/framework/core/filespec.js"], ...__m["/framework/core/audience.js"], ...__m["/framework/core/capsule.js"], ...__m["/framework/core/storage.js"], ...__m["/framework/core/keystore.js"], FRAMEWORK_VERSION, createCore };
+})();
+// ---- /framework/modules/signaling/index.js
+__m["/framework/modules/signaling/index.js"] = (function () {
+"use strict";
+const { rand, b64u, cat, uncat, utf8, fromUtf8, fingerprint } = __m["/framework/core/bytes.js"];
+const { LABELS, sign, verify, sealTo, unseal } = __m["/framework/core/crypto.js"];
+
+
+
+
+const TS_WINDOW = 5 * 60 * 1000;
+const boxOf = async (sigPub) => b64u.enc(await fingerprint(sigPub));
+
+async function sealSignal({ toDh, device, body }) {
+  const inner = utf8(JSON.stringify({ ...body, ts: Date.now(), dpub: b64u.enc(device.sigPub), ddh: b64u.enc(device.dhPub) }));
+  return sealTo(toDh, cat(inner, await sign(device.sigPriv, cat(LABELS.signal, inner))));
+}
+
+async function openSignal({ device, sealed, fromBox = null, now = Date.now() }) {
+  const [inner, sig, extra] = uncat(await unseal(device.dhPriv, device.dhPub, sealed));
+  if (!sig || extra) throw new Error("Malformed signal");
+  const body = JSON.parse(fromUtf8(inner));
+  const dpub = b64u.dec(body.dpub);
+  const from = await boxOf(dpub);
+  if (fromBox && from !== fromBox) throw new Error("Signal from an unexpected device");
+  if (!(await verify(dpub, sig, cat(LABELS.signal, inner)))) throw new Error("Signal signature invalid");
+  if (!Number.isSafeInteger(body.ts) || Math.abs(now - body.ts) > TS_WINDOW) throw new Error("Stale signal");
+  return { ...body, from, ddh: b64u.dec(body.ddh), dpub };
+}
+
+
+function memoryHub() {
+  const subs = new Map();
+  return {
+    channel: (name = "memory") => ({
+      name,
+      publish: async (to, from, text) => {
+        for (const fn of subs.get(to) ?? []) queueMicrotask(() => fn(text, from));
+      },
+      subscribe(box, fn) {
+        if (!subs.has(box)) subs.set(box, new Set());
+        subs.get(box).add(fn);
+        return () => subs.get(box)?.delete(fn);
+      },
+      online: async (boxes) => boxes.filter((b) => subs.get(b)?.size),
+    }),
+  };
+}
+
+function ntfyChannel({ base, topic = (box) => `cpsl-${box}`, metered = true, onState = () => {}, fetchImpl = globalThis.fetch, EventSourceImpl = globalThis.EventSource }) {
+  const root = String(base).replace(/\/+$/, "");
+  const set = (s) => {
+    if (ch.state === s) return;
+    ch.state = s;
+    onState(s);
+  };
+  const ch = {
+    name: `ntfy:${root}`,
+    metered,
+    state: "connecting",
+    async publish(to, _from, text) {
+      const r = await fetchImpl(`${root}/${topic(to)}`, { method: "POST", body: text });
+      if (!r.ok) throw new Error(`ntfy refused the message (${r.status})`);
+    },
+    subscribe(box, fn) {
+      if (!EventSourceImpl) throw new Error("This environment has no EventSource.");
+      let es = null;
+      let stopped = false;
+      let retry = 0;
+      let timer = null;
+      const open = () => {
+        es = new EventSourceImpl(`${root}/${topic(box)}/sse`);
+        es.onopen = () => {
+          retry = 0;
+          set("up");
+        };
+        es.onmessage = (e) => {
+          try {
+            const m = JSON.parse(e.data);
+            if (typeof m.message === "string") fn(m.message);
+          } catch {
+            /* not ours */
+          }
+        };
+        es.onerror = () => {
+          if (es.readyState !== 2) return set("connecting"); // the browser retries
+          set("down");
+          if (!stopped) timer = setTimeout(open, Math.min(30000, 1000 * 2 ** retry++));
+        };
+      };
+      open();
+      return () => {
+        stopped = true;
+        clearTimeout(timer);
+        es.close();
+      };
+    },
+  };
+  return ch;
+}
+
+
+const MAX_PARTS = 16;
+
+function splitSignal(text, size = 0) {
+  if (!size || text.length <= size) return [text];
+  const count = Math.ceil(text.length / size);
+  if (count > MAX_PARTS) throw new Error("The signal is too large.");
+  const id = b64u.enc(rand(6));
+  return Array.from({ length: count }, (_, n) => `~${id}.${n}.${count}.${text.slice(n * size, (n + 1) * size)}`);
+}
+
+function createJoiner({ ttl = 30000, max = 64 } = {}) {
+  const open = new Map(); // id -> { parts, got, t }
+  return (text) => {
+    if (typeof text !== "string" || !text.startsWith("~")) return text;
+    const m = /^~([A-Za-z0-9_-]{8})\.(\d{1,2})\.(\d{1,2})\.([A-Za-z0-9_-]+)$/.exec(text);
+    if (!m) return null;
+    const [, id, ns, cs, data] = m;
+    const n = Number(ns);
+    const count = Number(cs);
+    if (count < 2 || count > MAX_PARTS || n >= count) return null;
+    const now = Date.now();
+    for (const [k, v] of open) if (now - v.t > ttl) open.delete(k);
+    let a = open.get(id);
+    if (!a) {
+      if (open.size >= max) return null;
+      a = { parts: new Array(count), got: 0, t: now };
+      open.set(id, a);
+    }
+    if (a.parts.length !== count || a.parts[n] !== undefined) return null;
+    a.parts[n] = data;
+    if (++a.got < count) return null;
+    open.delete(id);
+    return a.parts.join("");
+  };
+}
+
+
+function createSignaling({ me, channels = [], onError = () => {}, partSize = 0 }) {
+  const handlers = new Map();
+  const seen = new Map(); // mid -> time, for duplicates across channels
+  const pongs = new Map(); // nonce -> resolve
+  const stops = [];
+  const join = createJoiner();
+  let box = null;
+
+  const dispatch = async (part, fromBox) => {
+    const text = join(part);
+    if (text === null) return;
+    let body;
+    try {
+      body = await openSignal({ device: me.device, sealed: text, fromBox });
+    } catch (e) {
+      return onError(e);
+    }
+    if (typeof body.mid !== "string" || seen.has(body.mid)) return;
+    seen.set(body.mid, Date.now());
+    for (const [k, t] of seen) if (Date.now() - t > 2 * TS_WINDOW) seen.delete(k);
+    if (body.t === "ping") return void api.send({ box: body.from, dh: body.ddh }, { t: "pong", nonce: body.nonce }).catch(onError);
+    if (body.t === "pong") return void pongs.get(body.nonce)?.(body.from);
+    for (const fn of handlers.get(body.t) ?? []) Promise.resolve().then(() => fn(body)).catch(onError);
+  };
+
+  const api = {
+    async start() {
+      box = await boxOf(me.device.sigPub);
+      for (const ch of channels) stops.push(ch.subscribe(box, (text, from) => dispatch(text, from ?? null)));
+      return box;
+    },
+    box: () => box,
+    receive: (text, fromBox = null) => dispatch(text, fromBox),
+    on(type, fn) {
+      if (!handlers.has(type)) handlers.set(type, new Set());
+      handlers.get(type).add(fn);
+      return () => handlers.get(type).delete(fn);
+    },
+    async send(to, body, { light = false } = {}) {
+      box ??= await boxOf(me.device.sigPub);
+      const sealed = await sealSignal({ toDh: to.dh, device: me.device, body: { ...body, mid: b64u.enc(rand(9)) } });
+      const parts = splitSignal(sealed, partSize);
+      const free = light ? channels.filter((ch) => !ch.metered && (ch.state ?? "up") === "up") : [];
+      const use = free.length ? free : channels;
+      const res = await Promise.allSettled(
+        use.map(async (ch) => {
+          for (const p of parts) await ch.publish(to.box, box, p);
+        }),
+      );
+      if (!res.some((r) => r.status === "fulfilled")) throw new Error(res[0]?.reason?.message ?? "No signaling channel is available.");
+    },
+    async discover(peers, { timeoutMs = 3000 } = {}) {
+      const up = new Set();
+      await Promise.allSettled(channels.filter((ch) => ch.online).map(async (ch) => (await ch.online(peers.map((p) => p.box))).forEach((b) => up.add(b))));
+      const rest = peers.filter((p) => !up.has(p.box));
+      if (rest.length && channels.some((ch) => !ch.online)) {
+        await Promise.allSettled(
+          rest.map(
+            (p) =>
+              new Promise((resolve) => {
+                const nonce = b64u.enc(rand(9));
+                const t = setTimeout(() => (pongs.delete(nonce), resolve()), timeoutMs);
+                pongs.set(nonce, (from) => {
+                  if (from !== p.box) return;
+                  clearTimeout(t);
+                  pongs.delete(nonce);
+                  up.add(p.box);
+                  resolve();
+                });
+                api.send(p, { t: "ping", nonce }).catch(() => {});
+              }),
+          ),
+        );
+      }
+      return peers.filter((p) => up.has(p.box));
+    },
+    close() {
+      for (const s of stops.splice(0)) s();
+    },
+  };
+  return api;
+}
+
+return { TS_WINDOW, boxOf, sealSignal, openSignal, memoryHub, ntfyChannel, MAX_PARTS, splitSignal, createJoiner, createSignaling };
+})();
+// ---- /framework/modules/pairing/index.js
+__m["/framework/modules/pairing/index.js"] = (function () {
+"use strict";
+const { rand, b64u, cat, utf8, fromUtf8, sha256, fingerprint, isB64 } = __m["/framework/core/bytes.js"];
+const { hkdfBytes, hkdfAes, aeadSeal, aeadOpen, sign, verify } = __m["/framework/core/crypto.js"];
+
+
+
+
+const PAIR_WINDOW = 30000;
+const JOIN_TIMEOUT = 60000;
+const MAX_INFO = 300;
+const MAX_JOINS = 30; // different devices answered per window (flood guard)
+const GRACE = 5000; // keep answering after success, so the last message can be repeated
+
+const L = {
+  topic: "cpsl/1/pair/topic",
+  key: "cpsl/1/pair/key",
+  msg: "cpsl/1/pair/msg",
+  join: "cpsl/1/pair/join",
+  welcome: "cpsl/1/pair/welcome",
+  sid: "cpsl/1/pair/sid",
+  confirm: "cpsl/1/pair/confirm",
+};
+
+
+async function deviceId(sigPub) {
+  return Array.from((await fingerprint(sigPub)).subarray(0, 10), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+const formatId = (id) => String(id).toUpperCase().replace(/(.{4})(?=.)/g, "$1-");
+
+function identicon(id) {
+  if (!/^[0-9a-f]{20,}$/i.test(id)) throw new Error("An identicon needs an id of at least 20 hex digits.");
+  const b = id.match(/../g).map((h) => parseInt(h, 16));
+  const cells = [];
+  let bit = 0;
+  for (let y = 0; y < 5; y++) {
+    for (let x = 0; x < 3; x++) {
+      if ((b[bit >> 3] >> (bit & 7)) & 1) {
+        cells.push([x, y]);
+        if (x < 2) cells.push([4 - x, y]);
+      }
+      bit++;
+    }
+  }
+  return { hue: ((b[8] << 8) | b[9]) % 360, cells };
+}
+
+function identiconSvg(id, { size = 40 } = {}) {
+  const { hue, cells } = identicon(id);
+  const rects = cells.map(([x, y]) => `<rect x="${x}" y="${y}" width="1" height="1"/>`).join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 5" width="${Number(size)}" height="${Number(size)}" role="img" aria-label="identicon" fill="hsl(${hue} 65% 45%)" shape-rendering="crispEdges">${rects}</svg>`;
+}
+
+
+async function lobbyOf(text) {
+  if (typeof text !== "string" || !text.length || text.length > 1000) throw new Error("The lobby needs a string of 1 to 1000 characters.");
+  const ikm = utf8(text.normalize("NFKC"));
+  return { box: `lobby-${b64u.enc(await hkdfBytes(ikm, L.topic, 16))}`, key: await hkdfAes(ikm, L.key) };
+}
+
+async function sealLobby(lobby, obj) {
+  return b64u.enc(await aeadSeal(lobby.key, cat(L.msg, lobby.box), utf8(JSON.stringify(obj))));
+}
+async function openLobby(lobby, text) {
+  try {
+    const o = JSON.parse(fromUtf8(await aeadOpen(lobby.key, cat(L.msg, lobby.box), b64u.dec(text))));
+    return o && typeof o === "object" ? o : null;
+  } catch {
+    return null;
+  }
+}
+
+const cleanInfo = (text) => {
+  const out = {};
+  try {
+    for (const [k, v] of Object.entries(JSON.parse(text))) if (/^[a-z]{1,12}$/.test(k) && typeof v === "string") out[k] = v.slice(0, 60);
+  } catch {
+    /* no info */
+  }
+  return out;
+};
+
+
+function createPairing({ device, channels = [], lobby, info = {}, windowMs = PAIR_WINDOW, joinMs = JOIN_TIMEOUT, upMs = 15000, retryMs = [2000, 3000, 4000, 5000, 6000], onState = () => {} }) {
+  const myInfo = JSON.stringify(info);
+  if (myInfo.length > MAX_INFO) throw new Error("The device info is too long.");
+  let S = null; // the running attempt
+
+  const snapshot = (s) => ({
+    role: s.role,
+    phase: s.phase,
+    deadline: s.deadline,
+    candidate: s.cand ? { id: s.cand.id, box: s.cand.box, info: s.cand.info } : null,
+    trusted: { local: !!s.cand?.local, remote: !!s.cand?.remote },
+    note: s.note,
+  });
+  const emit = (s) => onState(snapshot(s));
+  const after = (s, ms, fn) => {
+    const t = setTimeout(() => {
+      s.timers.delete(t);
+      if (!s.closed) fn();
+    }, ms);
+    s.timers.add(t);
+    return t;
+  };
+  const publish = async (s, obj) => {
+    const text = await sealLobby(s.lobby, obj);
+    await Promise.allSettled(channels.map((ch) => ch.publish(s.lobby.box, s.me.box, text)));
+  };
+  function close(s) {
+    s.closed = true;
+    for (const t of s.timers) clearTimeout(t);
+    for (const stop of s.stops.splice(0)) stop();
+  }
+  function fail(s, err) {
+    if (s.ended) return;
+    s.ended = true;
+    if (S === s) S = null;
+    close(s);
+    s.phase = "closed";
+    s.note = err.message;
+    emit(s);
+    s.reject(err);
+  }
+
+  async function start(role) {
+    if (S) throw new Error("Pairing is already running.");
+    const s = (S = { role, phase: "connecting", deadline: 0, cand: null, note: "", timers: new Set(), stops: [], rejected: new Set(), answered: new Map() });
+    const result = new Promise((resolve, reject) => Object.assign(s, { resolve, reject }));
+    result.catch(() => {}); // the caller gets the rejection through the returned promise
+    emit(s);
+    try {
+      s.lobby = await lobbyOf(typeof lobby === "function" ? await lobby() : lobby);
+      s.me = { spub: b64u.enc(device.sigPub), dh: b64u.enc(device.dhPub), id: await deviceId(device.sigPub), box: b64u.enc(await fingerprint(device.sigPub)) };
+      if (s.ended) return result;
+      for (const ch of channels) {
+        try {
+          s.stops.push(ch.subscribe(s.lobby.box, (text) => onText(s, text).catch(() => {})));
+        } catch {
+          /* this channel is not usable here */
+        }
+      }
+      const t0 = Date.now();
+      while (!channels.some((ch) => (ch.state ?? "up") === "up")) {
+        if (Date.now() - t0 > upMs) throw new Error("No signaling channel is reachable.");
+        await new Promise((r) => setTimeout(r, 200));
+        if (s.ended) return result;
+      }
+      if (role === "host") {
+        s.phase = "open";
+        s.deadline = Date.now() + windowMs;
+        after(s, windowMs, () => fail(s, new Error("The pairing window closed.")));
+        emit(s);
+      } else {
+        s.phase = "searching";
+        s.nonce = b64u.enc(rand(12));
+        const join = { t: "join", n: s.nonce, spub: s.me.spub, dh: s.me.dh, info: myInfo };
+        join.sig = b64u.enc(await sign(device.sigPriv, cat(L.join, s.lobby.box, join.n, device.sigPub, device.dhPub, myInfo)));
+        let tries = 0;
+        const knock = () => {
+          if (s.cand) return;
+          if (Date.now() - t0 > joinMs) return fail(s, new Error("No open pairing window was found. Start pairing on the other device first."));
+          publish(s, join).catch(() => {});
+          after(s, retryMs[Math.min(tries++, retryMs.length - 1)], knock);
+        };
+        emit(s);
+        knock();
+      }
+    } catch (e) {
+      fail(s, e);
+    }
+    return result;
+  }
+
+  async function candidate(s, m, joiner, host, n, mNonce) {
+    const sigPub = b64u.dec(m.spub);
+    const dh = b64u.dec(m.dh);
+    return {
+      spub: m.spub,
+      sigPub,
+      dh,
+      id: await deviceId(sigPub),
+      box: b64u.enc(await fingerprint(sigPub)),
+      info: cleanInfo(m.info),
+      sid: b64u.enc(await sha256(cat(L.sid, s.lobby.box, n, mNonce, joiner, host))),
+      local: false,
+      remote: false,
+      acked: false,
+    };
+  }
+  const validKeys = (m) => isB64(m.n, 16, 16) && isB64(m.spub, 80, 200) && isB64(m.dh, 80, 200) && isB64(m.sig, 40, 200) && typeof m.info === "string" && m.info.length <= MAX_INFO;
+
+  async function onText(s, text) {
+    if (s.closed) return;
+    const m = await openLobby(s.lobby, text);
+    if (!m || s.closed) return;
+
+    if (m.t === "join" && s.role === "host" && (s.phase === "open" || s.phase === "candidate")) {
+      if (!validKeys(m) || s.rejected.has(m.spub)) return;
+      const key = `${m.n}.${m.spub}`;
+      if (s.answered.has(key)) return void publish(s, s.answered.get(key)).catch(() => {}); // our answer got lost: repeat it
+      if (s.cand || s.checking || s.answered.size >= MAX_JOINS) return;
+      s.checking = true;
+      try {
+        const sigPub = b64u.dec(m.spub);
+        if (!(await verify(sigPub, b64u.dec(m.sig), cat(L.join, s.lobby.box, m.n, sigPub, b64u.dec(m.dh), m.info)))) return;
+        const mNonce = b64u.enc(rand(12));
+        const welcome = { t: "welcome", n: m.n, m: mNonce, spub: s.me.spub, dh: s.me.dh, info: myInfo, ttl: Math.max(0, s.deadline - Date.now()) };
+        welcome.sig = b64u.enc(await sign(device.sigPriv, cat(L.welcome, s.lobby.box, m.n, mNonce, device.sigPub, device.dhPub, myInfo, sigPub)));
+        const cand = m.spub === s.me.spub ? null : await candidate(s, m, sigPub, device.sigPub, m.n, mNonce);
+        if (s.closed || s.phase !== "open") return;
+        s.answered.set(key, welcome);
+        if (cand) {
+          s.cand = cand;
+          s.phase = "candidate";
+          s.note = "";
+          emit(s);
+        }
+        publish(s, welcome).catch(() => {});
+      } finally {
+        s.checking = false;
+      }
+      return;
+    }
+
+    if (m.t === "welcome" && s.role === "join" && s.phase === "searching" && !s.cand && !s.checking) {
+      if (!validKeys(m) || m.n !== s.nonce || !isB64(m.m, 16, 16)) return;
+      s.checking = true; // the same welcome arrives once per channel
+      try {
+        const sigPub = b64u.dec(m.spub);
+        if (!(await verify(sigPub, b64u.dec(m.sig), cat(L.welcome, s.lobby.box, m.n, m.m, sigPub, b64u.dec(m.dh), m.info, device.sigPub)))) return;
+        if (s.closed) return;
+        if (m.spub === s.me.spub) return fail(s, new Error("The other device has the same id: both pages share one browser profile. Use another browser or profile."));
+        const cand = await candidate(s, m, device.sigPub, sigPub, m.n, m.m);
+        if (s.closed) return;
+        s.cand = cand;
+        s.phase = "candidate";
+        s.deadline = Date.now() + Math.min(Math.max(0, Number(m.ttl) || 0), 10 * 60000);
+        after(s, s.deadline - Date.now(), () => fail(s, new Error("The pairing window closed.")));
+        emit(s);
+      } finally {
+        s.checking = false;
+      }
+      return;
+    }
+
+    if ((m.t === "trust" || m.t === "reject") && s.cand && m.sid === s.cand.sid && isB64(m.sig, 40, 200)) {
+      const c = s.cand;
+      if (!(await verify(c.sigPub, b64u.dec(m.sig), cat(L.confirm, c.sid, m.t, m.seen ? "1" : "0")))) return;
+      if (s.cand !== c || s.closed) return;
+      if (m.t === "reject") {
+        if (s.phase !== "candidate") return;
+        if (s.role === "join") return fail(s, new Error("The other device rejected the pairing."));
+        return drop(s, "The other device rejected the pairing.");
+      }
+      c.remote = true;
+      if (m.seen) c.acked = true;
+      if (s.phase === "done") {
+        if (!m.seen) confirm(s, "trust").catch(() => {}); // the peer still waits for our trust: repeat it
+        return;
+      }
+      emit(s);
+      if (c.local) finish(s);
+    }
+  }
+
+  async function confirm(s, t) {
+    const c = s.cand;
+    const seen = c.remote;
+    const sig = b64u.enc(await sign(device.sigPriv, cat(L.confirm, c.sid, t, seen ? "1" : "0")));
+    await publish(s, { t, sid: c.sid, seen, sig });
+  }
+  function drop(s, note) {
+    s.rejected.add(s.cand.spub);
+    s.cand = null;
+    s.phase = "open";
+    s.note = note;
+    emit(s);
+  }
+  function finish(s) {
+    if (s.ended) return;
+    s.ended = true;
+    if (S === s) S = null;
+    for (const t of s.timers) clearTimeout(t);
+    s.timers.clear();
+    s.phase = "done";
+    emit(s);
+    const c = s.cand;
+    confirm(s, "trust").catch(() => {}); // tells the peer that we have its trust
+    const t = setTimeout(() => close(s), GRACE);
+    t.unref?.(); // Node: do not keep the process alive for it
+    s.resolve({ id: c.id, box: c.box, sigPub: c.sigPub, dh: c.dh, info: c.info });
+  }
+
+  return {
+    host: () => start("host"),
+    join: () => start("join"),
+    state: () => (S ? snapshot(S) : null),
+    trust() {
+      const s = S;
+      const c = s?.cand;
+      if (!c || c.local) return;
+      c.local = true;
+      emit(s);
+      const again = () => {
+        if (s.closed || s.cand !== c || c.acked) return;
+        confirm(s, "trust").catch(() => {});
+        const t = setTimeout(again, 1500);
+        s.timers.add(t);
+      };
+      again();
+      if (c.remote) finish(s);
+    },
+    reject() {
+      const s = S;
+      if (!s?.cand) return;
+      confirm(s, "reject").catch(() => {});
+      if (s.role === "join") fail(s, new Error("You rejected the device."));
+      else drop(s, "You rejected the device.");
+    },
+    cancel() {
+      if (S) fail(S, new Error("Pairing was cancelled."));
+    },
+  };
+}
+
+return { PAIR_WINDOW, JOIN_TIMEOUT, deviceId, formatId, identicon, identiconSvg, lobbyOf, sealLobby, openLobby, createPairing };
+})();
+// ---- /framework/modules/sync/index.js
+__m["/framework/modules/sync/index.js"] = (function () {
+"use strict";
+const { hashB64, concatBytes } = __m["/framework/core/bytes.js"];
+const { packCapsule, unpackCapsule, specOnly, attachParts } = __m["/framework/core/capsule.js"];
+
+
+
+
+const SYNC_CHUNK = 64 * 1024;
+const MAX_OBJECT = 512 * 1024 * 1024;
+const MAX_OBJECTS = 8192;
+const ID_RE = /^[A-Za-z0-9_-]{43}$/;
+const KINDS = ["spec", "fragment", "attachment"];
+
+
+function memoryObjectStore(initial = []) {
+  const m = new Map(initial.map((o) => [o.id, o]));
+  return {
+    list: async () => [...m.values()].map((o) => ({ id: o.id, size: o.bytes.length, kind: o.kind })),
+    has: async (id) => m.has(id),
+    get: async (id) => m.get(id)?.bytes ?? null,
+    put: async (id, bytes, kind) => void m.set(id, { id, bytes, kind }),
+    objects: () => [...m.values()],
+  };
+}
+
+async function capsuleObjects(c) {
+  const spec = await packCapsule(specOnly(c));
+  const out = [{ id: await hashB64(spec), kind: "spec", bytes: spec }];
+  c.fragments.forEach((b, i) => b && out.push({ id: c.fs.fragments[i].id, kind: "fragment", bytes: b }));
+  for (const [name, b] of Object.entries(c.attachments ?? {})) out.push({ id: c.fs.att[name].id, kind: "attachment", bytes: b });
+  return out;
+}
+
+async function capsulesFrom(store) {
+  const out = [];
+  for (const o of await store.list()) {
+    if (o.kind !== "spec") continue;
+    const c = await unpackCapsule(await store.get(o.id));
+    const fragments = {};
+    for (let i = 0; i < c.fs.fragments.length; i++) fragments[i] = await store.get(c.fs.fragments[i].id);
+    const attachments = {};
+    for (const [name, a] of Object.entries(c.fs.att ?? {})) attachments[name] = await store.get(a.id);
+    out.push(await attachParts(c, { fragments, attachments }));
+  }
+  return out;
+}
+
+
+function pipePair() {
+  const mk = () => ({ onmessage: null, onclose: null, closed: false });
+  const a = mk();
+  const b = mk();
+  const wire = (self, peer) => {
+    self.send = (d) => {
+      if (self.closed || peer.closed) throw new Error("The connection is closed.");
+      const copy = typeof d === "string" ? d : d.slice();
+      queueMicrotask(() => peer.onmessage?.(copy));
+    };
+    self.close = () => {
+      if (self.closed) return;
+      self.closed = true;
+      queueMicrotask(() => {
+        peer.closed = true;
+        peer.onclose?.();
+        self.onclose?.();
+      });
+    };
+  };
+  wire(a, b);
+  wire(b, a);
+  return [a, b];
+}
+
+function reader(pipe, onFrame, onEnd) {
+  let chain = Promise.resolve();
+  let ended = false;
+  const end = (err) => {
+    if (ended) return;
+    ended = true;
+    onEnd(err);
+  };
+  pipe.onmessage = (d) => {
+    chain = chain.then(() => (ended ? null : onFrame(d))).catch(end);
+  };
+  pipe.onclose = () => {
+    chain = chain.then(() => end(new Error("The connection closed before the transfer finished.")));
+  };
+  return end;
+}
+
+const parse = (d) => {
+  if (typeof d !== "string" || d.length > 2 * 1024 * 1024) throw new Error("Unexpected sync frame.");
+  return JSON.parse(d);
+};
+
+
+function serve(pipe, store, { filter = () => true } = {}) {
+  return new Promise((resolve, reject) => {
+    const sent = [];
+    let peerHas = [];
+    const end = reader(
+      pipe,
+      async (d) => {
+        const m = parse(d);
+        if (m.t === "idx?") await pipe.send(JSON.stringify({ t: "idx", objects: (await store.list()).filter(filter).slice(0, MAX_OBJECTS) }));
+        else if (m.t === "have") peerHas = Array.isArray(m.ids) ? m.ids.filter((x) => ID_RE.test(x)) : [];
+        else if (m.t === "want") {
+          const offered = new Map((await store.list()).filter(filter).map((o) => [o.id, o]));
+          for (const id of Array.isArray(m.ids) ? m.ids : []) {
+            const o = offered.get(id);
+            const bytes = o ? await store.get(id) : null;
+            if (!bytes) continue; // not offered: nothing is sent, the puller sees it missing
+            await pipe.send(JSON.stringify({ t: "obj", id, size: bytes.length, kind: o.kind }));
+            for (let off = 0; off < bytes.length; off += SYNC_CHUNK) await pipe.send(bytes.subarray(off, Math.min(bytes.length, off + SYNC_CHUNK)));
+            sent.push(id);
+          }
+          await pipe.send(JSON.stringify({ t: "done" }));
+        } else if (m.t === "bye") end(null);
+        else throw new Error("Unexpected sync message.");
+      },
+      (err) => (err && !sent.length ? reject(err) : resolve({ sent, peerHas })),
+    );
+  });
+}
+
+
+function pull(pipe, store, { want = () => true, onProgress = () => {}, maxObject = MAX_OBJECT, maxTotal = Infinity } = {}) {
+  return new Promise((resolve, reject) => {
+    let offered = [];
+    let expecting = new Map();
+    let cur = null; // { id, size, kind, parts, n }
+    const got = [];
+    let total = 0;
+    let done = 0;
+    const end = reader(
+      pipe,
+      async (d) => {
+        if (cur && typeof d !== "string") {
+          const b = d instanceof Uint8Array ? d : new Uint8Array(d);
+          cur.parts.push(b);
+          cur.n += b.length;
+          done += b.length;
+          if (cur.n > cur.size) throw new Error("The peer sent too much data.");
+          onProgress(total ? Math.min(1, done / total) : 1);
+          if (cur.n < cur.size) return;
+          return finish();
+        }
+        const m = parse(d);
+        if (m.t === "idx") {
+          if (!Array.isArray(m.objects) || m.objects.length > MAX_OBJECTS) throw new Error("Unexpected sync index.");
+          offered = m.objects.filter((o) => o && ID_RE.test(o.id) && KINDS.includes(o.kind) && Number.isSafeInteger(o.size) && o.size >= 0 && o.size <= maxObject);
+          const have = [];
+          for (const o of offered) {
+            if (await store.has(o.id)) have.push(o.id);
+            else if (want(o)) expecting.set(o.id, o);
+          }
+          total = [...expecting.values()].reduce((n, o) => n + o.size, 0);
+          if (total > maxTotal) throw new Error("The peer offers more data than allowed.");
+          await pipe.send(JSON.stringify({ t: "have", ids: have }));
+          await pipe.send(JSON.stringify({ t: "want", ids: [...expecting.keys()] }));
+        } else if (m.t === "obj") {
+          const o = expecting.get(m.id);
+          if (cur || !o || m.size !== o.size) throw new Error("The peer sent an object that was not asked for.");
+          cur = { ...o, parts: [], n: 0 };
+          if (o.size === 0) await finish();
+        } else if (m.t === "done") {
+          await pipe.send(JSON.stringify({ t: "bye" }));
+          end(null);
+        } else throw new Error("Unexpected sync message.");
+      },
+      (err) => (err ? reject(err) : resolve({ got, offered })),
+    );
+    async function finish() {
+      const bytes = concatBytes(cur.parts);
+      if ((await hashB64(bytes)) !== cur.id) throw new Error("A transferred object does not match its id (corrupted or forged).");
+      await store.put(cur.id, bytes, cur.kind);
+      got.push(cur.id);
+      expecting.delete(cur.id);
+      cur = null;
+    }
+    Promise.resolve(pipe.send(JSON.stringify({ t: "idx?" }))).catch(end);
+  });
+}
+
+return { SYNC_CHUNK, MAX_OBJECT, MAX_OBJECTS, memoryObjectStore, capsuleObjects, capsulesFrom, pipePair, serve, pull };
+})();
+// ---- /framework/modules/sync/webrtc.js
+__m["/framework/modules/sync/webrtc.js"] = (function () {
+"use strict";
+const { rand, b64u } = __m["/framework/core/bytes.js"];
+
+
+
+const OPEN_TIMEOUT = 30000;
+const ANSWER_TIMEOUT = 120000;
+
+function iceDone(pc) {
+  if (pc.iceGatheringState === "complete") return Promise.resolve();
+  return new Promise((resolve) => {
+    const t = setTimeout(resolve, 3000);
+    pc.addEventListener("icegatheringstatechange", () => {
+      if (pc.iceGatheringState === "complete") {
+        clearTimeout(t);
+        resolve();
+      }
+    });
+  });
+}
+
+function channelPipe(dc, pc) {
+  dc.binaryType = "arraybuffer";
+  dc.bufferedAmountLowThreshold = 1 << 20;
+  const pipe = {
+    onmessage: null,
+    onclose: null,
+    async send(d) {
+      if (dc.readyState !== "open") throw new Error("The connection is closed.");
+      if (dc.bufferedAmount > 4 << 20) await new Promise((r) => (dc.onbufferedamountlow = r));
+      dc.send(d);
+    },
+    close() {
+      setTimeout(() => pc?.close(), 500); // let the last frames drain
+    },
+  };
+  dc.onmessage = (e) => pipe.onmessage?.(typeof e.data === "string" ? e.data : new Uint8Array(e.data));
+  dc.onclose = () => pipe.onclose?.();
+  return pipe;
+}
+
+const opened = (dc) =>
+  new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error("Could not connect to the other device (different networks need a STUN/TURN server).")), OPEN_TIMEOUT);
+    const ok = () => (clearTimeout(t), resolve());
+    if (dc.readyState === "open") ok();
+    else dc.onopen = ok;
+  });
+
+function createPeerLink({ signaling, ice = [], config = {}, onIncoming = () => {}, RTC = globalThis.RTCPeerConnection }) {
+  const pending = new Map(); // sid -> { resolve, reject }
+
+  signaling.on("rtc-answer", (b) => pending.get(b.sid)?.resolve(b));
+  signaling.on("rtc-decline", (b) => pending.get(b.sid)?.reject(new Error("The receiver declined the transfer.")));
+  signaling.on("rtc-offer", (b) => {
+    if (typeof b.sid !== "string" || typeof b.sdp !== "string") return;
+    const peer = { box: b.from, dh: b.ddh };
+    let answered = false;
+    onIncoming({
+      from: b.from,
+      dpub: b.dpub,
+      info: b.info && typeof b.info === "object" ? b.info : {},
+      decline: async () => {
+        if (answered) return;
+        answered = true;
+        await signaling.send(peer, { t: "rtc-decline", sid: b.sid });
+      },
+      accept: async () => {
+        answered = true;
+        if (!RTC) throw new Error("This browser has no WebRTC.");
+        const pc = new RTC({ ...config, iceServers: ice });
+        const got = new Promise((resolve, reject) => {
+          const t = setTimeout(() => reject(new Error("The transfer timed out.")), ANSWER_TIMEOUT);
+          pc.ondatachannel = ({ channel }) => {
+            clearTimeout(t);
+            const pipe = channelPipe(channel, pc);
+            opened(channel).then(() => resolve(pipe), reject);
+          };
+        });
+        await pc.setRemoteDescription({ type: "offer", sdp: b.sdp });
+        await pc.setLocalDescription(await pc.createAnswer());
+        await iceDone(pc);
+        await signaling.send(peer, { t: "rtc-answer", sid: b.sid, sdp: pc.localDescription.sdp });
+        return got;
+      },
+    });
+  });
+
+  async function connect(peer, info = {}) {
+    if (!RTC) throw new Error("This browser has no WebRTC.");
+    const sid = b64u.enc(rand(9));
+    const pc = new RTC({ ...config, iceServers: ice });
+    const dc = pc.createDataChannel("sync", { ordered: true });
+    const pipe = channelPipe(dc, pc);
+    await pc.setLocalDescription(await pc.createOffer());
+    await iceDone(pc);
+    let timer = null;
+    const answered = new Promise((resolve, reject) => {
+      pending.set(sid, { resolve, reject });
+      timer = setTimeout(() => reject(new Error("No answer from the receiver.")), ANSWER_TIMEOUT);
+    });
+    try {
+      await signaling.send(peer, { t: "rtc-offer", sid, sdp: pc.localDescription.sdp, info });
+      const ans = await answered;
+      await pc.setRemoteDescription({ type: "answer", sdp: ans.sdp });
+      await opened(dc);
+      return pipe;
+    } catch (e) {
+      pc.close();
+      throw e;
+    } finally {
+      clearTimeout(timer);
+      pending.delete(sid);
+    }
+  }
+
+  return { connect };
+}
+
+return { channelPipe, createPeerLink };
+})();
+// ---- /apps/wormhole/src/engine.js
+__m["/apps/wormhole/src/engine.js"] = (function () {
+"use strict";
+const { createCore, b64u, sha256, isHash, decryptContent, openFilespecSecret, missingFragments } = __m["/framework/core/index.js"];
+const { createSignaling } = __m["/framework/modules/signaling/index.js"];
+const { createPairing, deviceId } = __m["/framework/modules/pairing/index.js"];
+const { serve, pull, memoryObjectStore, capsuleObjects, capsulesFrom } = __m["/framework/modules/sync/index.js"];
+const { createPeerLink } = __m["/framework/modules/sync/webrtc.js"];
+
+
+
+
+
+
+
+const hex = (u) => Array.from(u, (b) => b.toString(16).padStart(2, "0")).join("");
+
+const lobbyString = (secret, code = "") => `wormhole/1|${secret}|${String(code).normalize("NFKC").trim().toLowerCase().replace(/\s+/g, " ")}`;
+
+const isNewer = (a, b) => !b || a.n > b.n || (a.n === b.n && a.fs !== b.fs && a.by > b.by);
+
+const validState = (s) => (s && Number.isSafeInteger(s.n) && s.n > 0 && /^[0-9a-f]{20}$/.test(s.by) && isHash(s.fs) ? { n: s.n, by: s.by, fs: s.fs } : null);
+const stateOf = (f) => (f ? { n: f.n, by: f.by, fs: f.fs } : null);
+
+function createWormhole({ storage, channels, config, info = {}, RTC = globalThis.RTCPeerConnection, onChange = () => {}, onLog = () => {} }) {
+  const core = createCore({ storage });
+  let device = null;
+  let id = "";
+  let peer = null; // { id, box, sigPub, dh, name, os, at }
+  let file = null; // { fileId, fs, n, by, name, type, size, ts, mtime, hash }
+  let plain = null; // { fs, bytes }: the decrypted file, kept for the page
+  let peerState; // undefined: unknown, null: the peer has no file
+  let peerHas = ""; // fs the peer is known to hold (survives a reload)
+  let online = false;
+  let lastSeen = 0;
+  let busy = null; // { dir: "send" | "recv", progress }
+  let pairing = null;
+  let pairState = null;
+  let note = "";
+  let sig = null;
+  let link = null;
+  let beatTimer = null;
+  let misses = 0;
+  let pushTries = 0;
+  let stopped = false;
+
+  const log = (m) => onLog(m);
+  const change = () => onChange(snapshot());
+  const peerAddr = () => ({ box: peer.box, dh: peer.dh });
+
+  function snapshot() {
+    let sync = "";
+    if (file) {
+      if (busy) sync = busy.dir === "send" ? "sending" : "receiving";
+      else if (peerHas === file.fs) sync = online ? "in sync" : "in sync (peer offline)";
+      else sync = online ? "syncing" : "pending";
+    } else if (busy) sync = "receiving";
+    return {
+      me: { id, info },
+      peer: peer ? { id: peer.id, name: peer.name, os: peer.os } : null,
+      online,
+      pair: pairState,
+      note,
+      file: file ? { ...file } : null,
+      sync,
+      progress: busy ? busy.progress : null,
+      channels: channels.map((ch) => ({ name: ch.name, state: ch.state ?? "up" })),
+    };
+  }
+
+
+  function setOnline(v) {
+    if (online === v) return;
+    online = v;
+    misses = 0;
+    log(v ? "paired device is online" : "paired device is offline");
+    beat();
+    change();
+  }
+  async function hello(re = false, light = true) {
+    if (!sig || !peer) return;
+    try {
+      await sig.send(peerAddr(), { t: "wh-hello", re, state: stateOf(file) }, { light });
+    } catch (e) {
+      if (!re) log(`signaling: ${e.message}`);
+    }
+  }
+  function beat() {
+    clearTimeout(beatTimer);
+    if (!sig || stopped) return;
+    const steps = config.offlineSteps;
+    const ms = online ? config.keepaliveMs : steps[Math.min(misses++, steps.length - 1)];
+    beatTimer = setTimeout(() => {
+      if (online && Date.now() - lastSeen > 2.2 * config.keepaliveMs) setOnline(false);
+      hello(false);
+      beat();
+    }, ms);
+    beatTimer.unref?.();
+  }
+  function onHello(b) {
+    if (!peer || b.from !== peer.box) return;
+    lastSeen = Date.now();
+    peerState = validState(b.state);
+    if (peerState && file && peerState.fs === file.fs) rememberPeerHas(file.fs);
+    if (!b.re) hello(true);
+    if (!online) setOnline(true);
+    else change();
+    reconcile();
+  }
+  function rememberPeerHas(fs) {
+    if (peerHas === fs) return;
+    peerHas = fs;
+    storage.set("app", "peerHas", fs).catch(() => {});
+  }
+  function reconcile() {
+    if (!online || !file || busy) return;
+    if (peerState === undefined || (peerState && !isNewer(stateOf(file), peerState))) return;
+    push();
+  }
+
+
+  async function startLink() {
+    stopLink();
+    if (!peer) return;
+    stopped = false;
+    sig = createSignaling({ me: { device }, channels, partSize: config.partSize, onError: (e) => log(`ignored a signal: ${e.message}`) });
+    sig.on("wh-hello", onHello);
+    sig.on("wh-bye", (b) => peer && b.from === peer.box && setOnline(false));
+    link = createPeerLink({ signaling: sig, ice: config.ice, config: config.icePolicy === "relay" ? { iceTransportPolicy: "relay" } : {}, RTC, onIncoming: (o) => receive(o) });
+    await sig.start();
+    hello(false, false);
+    beat();
+  }
+  function stopLink() {
+    clearTimeout(beatTimer);
+    sig?.close();
+    sig = null;
+    link = null;
+    online = false;
+    peerState = undefined;
+    misses = 0;
+  }
+  const withTimeout = (p, ms, what) => {
+    let t;
+    const timeout = new Promise((_, reject) => (t = setTimeout(() => reject(new Error(what)), ms)));
+    p.then(
+      (pipe) => t === null && pipe.close(), // too late: drop the connection
+      () => {},
+    );
+    return Promise.race([p, timeout]).finally(() => {
+      clearTimeout(t);
+      t = null;
+    });
+  };
+
+
+  async function push() {
+    if (busy || !file || !link) return;
+    const f = file;
+    busy = { dir: "send", progress: 0 };
+    change();
+    let pipe = null;
+    try {
+      const objects = await capsuleObjects(await core.files.get(f.fileId));
+      const total = objects.reduce((n, o) => n + o.bytes.length, 0) || 1;
+      pipe = await withTimeout(link.connect(peerAddr(), stateOf(f)), config.connectMs, "the other device did not answer");
+      const send = pipe.send;
+      let sent = 0;
+      let shown = 0;
+      pipe.send = async (d) => {
+        await send(d);
+        if (typeof d === "string") return;
+        sent += d.length;
+        if (sent - shown < total / 50 && sent < total) return;
+        shown = sent;
+        busy.progress = Math.min(1, sent / total);
+        change();
+      };
+      await serve(pipe, memoryObjectStore(objects));
+      pushTries = 0;
+      log(`sent “${f.name}” v${f.n}`);
+    } catch (e) {
+      log(`send failed: ${e.message}`);
+      if (++pushTries < 3) setTimeout(reconcile, 3000 * pushTries).unref?.();
+      else pushTries = 0; // wait for the next hello
+    } finally {
+      pipe?.close();
+      busy = null;
+      change();
+    }
+  }
+
+  async function receive(o) {
+    if (!peer || o.from !== peer.box) return;
+    const offered = validState(o.info);
+    if (!offered || busy || !isNewer(offered, stateOf(file))) return void o.decline().catch(() => {});
+    busy = { dir: "recv", progress: 0 };
+    change();
+    let pipe = null;
+    try {
+      pipe = await o.accept();
+      const store = memoryObjectStore();
+      let shown = 0;
+      await pull(pipe, store, {
+        maxTotal: config.maxFile * 1.01 + (1 << 20),
+        onProgress: (p) => {
+          if (p - shown < 0.02 && p < 1) return;
+          shown = p;
+          busy.progress = p;
+          change();
+        },
+      });
+      const c = (await capsulesFrom(store)).find((x) => x.fsId === offered.fs);
+      if (!c) throw new Error("the transfer did not contain the announced file");
+      await adopt(c, offered);
+    } catch (e) {
+      log(`RECEIVE FAILED: ${e.message}`);
+    } finally {
+      pipe?.close();
+      busy = null;
+      change();
+      hello(false, false); // our state: the sender sees that the file arrived
+    }
+  }
+
+  async function adopt(c, offered) {
+    if (missingFragments(c).length) throw new Error("the file is incomplete");
+    const u = await core.unlock(c);
+    const m = (await openFilespecSecret(c, u.keyring))?.meta;
+    const ok = m && m.n === offered.n && m.by === offered.by && (m.by === peer.id || m.by === id) && typeof m.name === "string" && m.name.length > 0 && m.name.length <= 255 && Number.isSafeInteger(m.size) && m.size >= 0 && m.size <= config.maxFile && /^[0-9a-f]{64}$/.test(m.hash);
+    if (!ok) throw new Error("invalid file header");
+    const bytes = await decryptContent(c, u.keyring);
+    if (bytes.length !== m.size) throw new Error("size mismatch");
+    if (hex(await sha256(bytes)) !== m.hash) throw new Error("hash mismatch, discarded");
+    const next = record(c, m);
+    if (!isNewer(stateOf(next), stateOf(file))) return log(`ignored received v${next.n}: the local v${file.n} is newer`);
+    await core.files.put(c, { access: { li: u.x.li, aid: u.x.aud.aid }, key: u.Ra });
+    await replaceFile(next, bytes);
+    rememberPeerHas(next.fs);
+    peerState = stateOf(next);
+    log(`received “${next.name}” v${next.n} (hash verified)`);
+  }
+  const record = (c, m) => ({ fileId: c.fs.id, fs: c.fsId, n: m.n, by: m.by, name: m.name, type: typeof m.type === "string" ? m.type.slice(0, 127) : "", size: m.size, ts: Number.isSafeInteger(m.ts) ? m.ts : Date.now(), mtime: Number.isSafeInteger(m.mtime) ? m.mtime : null, hash: m.hash });
+  async function replaceFile(next, bytes) {
+    const old = file;
+    file = next;
+    plain = { fs: next.fs, bytes };
+    await storage.set("app", "file", next);
+    if (old && old.fileId !== next.fileId) await core.files.delete(old.fileId).catch((e) => log(`could not remove the old file: ${e.message}`));
+  }
+
+
+  return {
+    async init() {
+      device = await core.instance.ensure();
+      id = await deviceId(device.sigPub);
+      peer = (await storage.get("app", "peer")) ?? null;
+      file = (await storage.get("app", "file")) ?? null;
+      peerHas = (await storage.get("app", "peerHas")) ?? "";
+      log(`ready: device ${id}`);
+      if (peer) await startLink();
+      change();
+    },
+    snapshot,
+    pair(role, code = "") {
+      if (peer) throw new Error("Unpair first.");
+      if (pairing?.state()) throw new Error("Pairing is already running.");
+      note = "";
+      pairing = createPairing({
+        device,
+        channels,
+        lobby: () => lobbyString(config.secret, code),
+        info,
+        windowMs: config.windowMs,
+        joinMs: config.joinMs,
+        ...(config.retryMs ? { retryMs: config.retryMs } : {}),
+        onState: (s) => {
+          pairState = s.phase === "closed" || s.phase === "done" ? null : s;
+          change();
+        },
+      });
+      const p = role === "host" ? pairing.host() : pairing.join();
+      p.then(
+        async (found) => {
+          peer = { id: found.id, box: found.box, sigPub: found.sigPub, dh: found.dh, name: found.info.name ?? "?", os: found.info.os ?? "?", at: Date.now() };
+          await storage.set("app", "peer", peer).catch((e) => log(`could not save the pairing: ${e.message}`));
+          log(`paired with ${peer.id}`);
+          await startLink();
+          change();
+        },
+        (e) => {
+          note = e.message;
+          log(`pairing ended: ${e.message}`);
+          change();
+        },
+      );
+      return p;
+    },
+    trust: () => pairing?.trust(),
+    reject: () => pairing?.reject(),
+    cancelPair: () => pairing?.cancel(),
+    async unpair() {
+      stopLink();
+      const old = file;
+      peer = null;
+      file = null;
+      plain = null;
+      peerHas = "";
+      note = "Unpaired.";
+      await storage.del("app", "peer");
+      await storage.del("app", "file");
+      await storage.del("app", "peerHas");
+      if (old) await core.files.delete(old.fileId).catch(() => {});
+      change();
+    },
+    async setFile({ name, type = "", bytes, mtime = null }) {
+      if (!peer) throw new Error("Pair a device first.");
+      if (bytes.length > config.maxFile) throw new Error(`The file is too large (${(bytes.length / 1e6).toFixed(1)} MB). The limit is ${(config.maxFile / 1e6).toFixed(0)} MB, because everything is held in memory.`);
+      const hash = hex(await sha256(bytes));
+      if (file && file.hash === hash && file.name === name) return void log("same content as the current file: nothing to do");
+      const meta = { name: String(name).slice(0, 255) || "file", type: String(type).slice(0, 127), size: bytes.length, mtime, ts: Date.now(), n: (file?.n ?? 0) + 1, by: id, hash };
+      const { c, secrets } = await core.encrypt({ bytes, meta, recipients: [{ dh: peer.dh }] });
+      await core.files.put(c, { access: { li: 0, aid: c.links[0].audiences[0].aid }, key: secrets[0].Ra });
+      await replaceFile(record(c, meta), bytes);
+      log(`new local file “${meta.name}” v${meta.n}`);
+      change();
+      if (online) reconcile();
+      else {
+        log("paired device offline: the file is sent on reconnect");
+        hello(false, false);
+      }
+    },
+    async readFile() {
+      if (!file) return null;
+      const f = file;
+      if (plain?.fs !== f.fs) {
+        const c = await core.files.get(f.fileId);
+        if (!c) throw new Error("The stored file is missing.");
+        plain = { fs: f.fs, bytes: await decryptContent(c, (await core.unlock(c)).keyring) };
+      }
+      return { bytes: plain.bytes, meta: { ...f } };
+    },
+    channelsChanged() {
+      change();
+      if (sig && !online && channels.some((ch) => (ch.state ?? "up") === "up")) {
+        misses = 0;
+        beat();
+      }
+    },
+    bye() {
+      if (sig && peer) sig.send(peerAddr(), { t: "wh-bye" }, { light: true }).catch(() => {});
+    },
+    stop() {
+      stopped = true;
+      pairing?.cancel();
+      stopLink();
+    },
+  };
+}
+
+return { lobbyString, isNewer, createWormhole };
+})();
+// ---- /apps/wormhole/src/markdown.js
+__m["/apps/wormhole/src/markdown.js"] = (function () {
+"use strict";
+
+
+const MAX_DEPTH = 12;
+const ITEM = /^( *)([-*+]|\d{1,9}[.)])\s+(.*)$/;
+const FENCE = /^ {0,3}(`{3,}|~{3,})\s*[\w+#.-]*\s*$/;
+const HEADING = /^ {0,3}(#{1,6})\s+(.*?)\s*#*\s*$/;
+const RULE = /^ {0,3}([-*_])( *\1){2,} *$/;
+const QUOTE = /^ {0,3}>/;
+const indent = (l) => l.length - l.trimStart().length;
+const startsBlock = (l) => FENCE.test(l) || HEADING.test(l) || RULE.test(l) || QUOTE.test(l) || ITEM.test(l);
+
+const isWebUrl = (u) => typeof u === "string" && u.length < 2000 && /^https?:\/\/[^\s<>"']+$/i.test(u);
+
+
+const INLINE = [
+  [/^\\([!-/:-@[-`{-~])/, (m) => m[1]],
+  [/^(`+)([\s\S]{0,2000}?[^`])\1(?!`)/, (m) => ({ tag: "code", kids: [m[2].replace(/\n/g, " ")] })],
+  [/^!\[([^\]\n]{0,300})\]\(([^)\s]{1,2000})(?:\s+"[^"\n]*")?\)/, (m) => `[image: ${m[1] || "no description"}] (${m[2]})`],
+  [/^\[([^\]\n]{1,500})\]\(([^)\s]{1,2000})(?:\s+"[^"\n]*")?\)/, (m, d) => (isWebUrl(m[2]) ? { tag: "a", href: m[2], kids: inline(m[1], d + 1) } : m[0])],
+  [/^<(https?:\/\/[^\s<>]{1,2000})>/i, (m) => ({ tag: "a", href: m[1], kids: [m[1]] })],
+  [/^(\*\*|__)(?=\S)([\s\S]{0,2000}?\S)\1/, (m, d) => ({ tag: "strong", kids: inline(m[2], d + 1) })],
+  [/^~~(?=\S)([\s\S]{0,2000}?\S)~~/, (m, d) => ({ tag: "del", kids: inline(m[1], d + 1) })],
+  [/^(\*|_)(?=\S)([\s\S]{0,2000}?\S)\1(?![*_])/, (m, d) => ({ tag: "em", kids: inline(m[2], d + 1) })],
+  [/^( {2,}|\\)\n/, () => ({ tag: "br", kids: [] })],
+  [/^\n/, () => " "],
+];
+
+function inline(text, depth = 0) {
+  const out = [];
+  let plain = "";
+  const flush = () => {
+    if (plain) out.push(plain);
+    plain = "";
+  };
+  let i = 0;
+  while (i < text.length) {
+    const rest = text.slice(i, i + 4200);
+    let hit = null;
+    if (depth < MAX_DEPTH && /^[\\`!\[<*_~ \n]/.test(rest)) {
+      const inWord = rest[0] === "_" && /\w/.test(text[i - 1] ?? "");
+      if (!inWord) {
+        for (const [re, make] of INLINE) {
+          const m = re.exec(rest);
+          if (m) {
+            hit = [m[0].length, make(m, depth)];
+            break;
+          }
+        }
+      }
+    }
+    if (!hit) {
+      plain += text[i++];
+      continue;
+    }
+    if (typeof hit[1] === "string") plain += hit[1];
+    else {
+      flush();
+      out.push(hit[1]);
+    }
+    i += hit[0];
+  }
+  flush();
+  return out;
+}
+
+
+function listAt(lines, start, depth) {
+  const first = ITEM.exec(lines[start]);
+  const base = first[1].length;
+  const ordered = /\d/.test(first[2]);
+  const items = [];
+  let i = start;
+  while (i < lines.length) {
+    const m = ITEM.exec(lines[i]);
+    if (!m || m[1].length !== base || /\d/.test(m[2]) !== ordered) break;
+    const body = [m[3]];
+    i++;
+    while (i < lines.length) {
+      const l = lines[i];
+      if (!l.trim()) {
+        const next = lines.slice(i + 1).find((x) => x.trim());
+        if (next === undefined || indent(next) <= base) break;
+        body.push("");
+      } else if (indent(l) > base) body.push(l.slice(Math.min(indent(l), base + 2)));
+      else if (startsBlock(l)) break;
+      else body.push(l.trim()); // a paragraph that continues without indentation
+      i++;
+    }
+    const kids = blocks(body, depth + 1);
+    items.push({ tag: "li", kids: kids[0]?.tag === "p" ? [...kids[0].kids, ...kids.slice(1)] : kids });
+    let j = i;
+    while (j < lines.length && !lines[j].trim()) j++;
+    if (j < lines.length && ITEM.exec(lines[j])?.[1].length === base) i = j;
+  }
+  return [{ tag: ordered ? "ol" : "ul", kids: items }, i];
+}
+
+function blocks(lines, depth) {
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      i++;
+      continue;
+    }
+    let m;
+    if ((m = FENCE.exec(line))) {
+      const body = [];
+      i++;
+      while (i < lines.length && !(lines[i].trim().startsWith(m[1]) && /^[`~]+$/.test(lines[i].trim()))) body.push(lines[i++]);
+      i++;
+      out.push({ tag: "pre", kids: [{ tag: "code", kids: [body.join("\n")] }] });
+    } else if ((m = HEADING.exec(line))) {
+      out.push({ tag: `h${m[1].length}`, kids: inline(m[2]) });
+      i++;
+    } else if (RULE.test(line)) {
+      out.push({ tag: "hr", kids: [] });
+      i++;
+    } else if (QUOTE.test(line) && depth < MAX_DEPTH) {
+      const body = [];
+      while (i < lines.length && QUOTE.test(lines[i])) body.push(lines[i++].replace(/^ {0,3}> ?/, ""));
+      out.push({ tag: "blockquote", kids: blocks(body, depth + 1) });
+    } else if (ITEM.test(line) && depth < MAX_DEPTH) {
+      const [list, next] = listAt(lines, i, depth);
+      out.push(list);
+      i = next;
+    } else {
+      const body = [line.trimStart()];
+      i++;
+      while (i < lines.length && lines[i].trim() && !startsBlock(lines[i])) body.push(lines[i++].replace(/^ +/, ""));
+      out.push({ tag: "p", kids: inline(body.join("\n")) });
+    }
+  }
+  return out;
+}
+
+function mdToTree(source) {
+  return blocks(String(source).replace(/\r\n?/g, "\n").replace(/\t/g, "    ").split("\n"), 0);
+}
+
+
+const IMAGE_EXT = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", avif: "image/avif", bmp: "image/bmp" };
+const IMAGE_TYPE = /^image\/(png|jpeg|gif|webp|avif|bmp)$/;
+
+function fileKind(name, type = "") {
+  const ext = /\.([a-z0-9]{1,8})$/i.exec(String(name))?.[1].toLowerCase() ?? "";
+  if (IMAGE_EXT[ext]) return { kind: "image", mime: IMAGE_EXT[ext] };
+  if (ext === "txt") return { kind: "text" };
+  if (ext === "md" || ext === "markdown") return { kind: "md" };
+  if (IMAGE_TYPE.test(type)) return { kind: "image", mime: type };
+  if (type === "text/plain") return { kind: "text" };
+  if (type === "text/markdown") return { kind: "md" };
+  return null;
+}
+
+return { isWebUrl, inline, mdToTree, fileKind };
+})();
+// ---- /framework/modules/signaling/mqtt.js
+__m["/framework/modules/signaling/mqtt.js"] = (function () {
+"use strict";
+const { rand, b64u, utf8, fromUtf8 } = __m["/framework/core/bytes.js"];
+
+
+
+const KEEPALIVE_S = 30;
+
+const varint = (n) => {
+  const out = [];
+  do {
+    let b = n % 128;
+    n = Math.floor(n / 128);
+    if (n > 0) b |= 128;
+    out.push(b);
+  } while (n > 0);
+  return out;
+};
+const str = (s) => {
+  const b = utf8(s);
+  return [b.length >> 8, b.length & 255, ...b];
+};
+function packet(first, body) {
+  const len = varint(body.length);
+  const out = new Uint8Array(1 + len.length + body.length);
+  out[0] = first;
+  out.set(len, 1);
+  out.set(body, 1 + len.length);
+  return out;
+}
+
+function mqttChannel({ url, name = `mqtt:${url}`, topic = (box) => `cpsl-${box}`, onState = () => {}, WebSocketImpl = globalThis.WebSocket }) {
+  const subs = new Map(); // topic -> Set(fn)
+  let ws = null;
+  let stopped = false;
+  let retry = 0;
+  let timer = null;
+  let pingTimer = null;
+  let watchdog = null;
+  let pid = 0;
+  let buf = new Uint8Array(0);
+
+  const set = (s) => {
+    if (ch.state === s) return;
+    ch.state = s;
+    onState(s);
+  };
+  const nextId = () => {
+    pid = (pid % 65535) + 1;
+    return [pid >> 8, pid & 255];
+  };
+  const arm = () => {
+    clearTimeout(watchdog);
+    watchdog = setTimeout(() => ws?.close(), (KEEPALIVE_S + 40) * 1000); // nothing heard: reconnect
+  };
+  const later = () => {
+    clearTimeout(timer);
+    if (!stopped && subs.size) timer = setTimeout(open, Math.min(30000, 1000 * 2 ** retry++));
+  };
+
+  function feed(chunk) {
+    const joined = new Uint8Array(buf.length + chunk.length);
+    joined.set(buf);
+    joined.set(chunk, buf.length);
+    buf = joined;
+    for (;;) {
+      if (buf.length < 2) return;
+      let i = 1;
+      let mult = 1;
+      let len = 0;
+      let b;
+      do {
+        if (i >= buf.length) return;
+        b = buf[i++];
+        len += (b & 127) * mult;
+        mult *= 128;
+      } while (b & 128 && i < 5);
+      if (buf.length < i + len) return;
+      const first = buf[0];
+      const body = buf.subarray(i, i + len);
+      buf = buf.subarray(i + len);
+      const type = first >> 4;
+      if (type === 2) {
+        if (body[1] !== 0) {
+          set("down");
+          ws.close();
+          return;
+        }
+        retry = 0;
+        for (const t of subs.keys()) ws.send(packet(0x82, Uint8Array.from([...nextId(), ...str(t), 0])));
+        set("up");
+      } else if (type === 3) {
+        const qos = (first >> 1) & 3;
+        const tl = (body[0] << 8) | body[1];
+        const t = fromUtf8(body.subarray(2, 2 + tl));
+        const text = fromUtf8(body.subarray(2 + tl + (qos ? 2 : 0)));
+        for (const fn of subs.get(t) ?? []) fn(text);
+      }
+    }
+  }
+
+  function open() {
+    if (stopped || ws) return;
+    if (!WebSocketImpl) throw new Error("This environment has no WebSocket.");
+    set("connecting");
+    buf = new Uint8Array(0);
+    let w;
+    try {
+      w = new WebSocketImpl(url, "mqtt");
+    } catch {
+      set("down");
+      return later();
+    }
+    ws = w;
+    w.binaryType = "arraybuffer";
+    arm();
+    w.onopen = () => w.send(packet(0x10, Uint8Array.from([...str("MQTT"), 4, 2, 0, KEEPALIVE_S, ...str(`cpsl-${b64u.enc(rand(9))}`)])));
+    w.onmessage = (e) => {
+      arm();
+      feed(new Uint8Array(e.data));
+    };
+    w.onclose = () => {
+      clearInterval(pingTimer);
+      clearTimeout(watchdog);
+      if (ws !== w) return;
+      ws = null;
+      set("down");
+      later();
+    };
+    w.onerror = () => {};
+    clearInterval(pingTimer);
+    pingTimer = setInterval(() => w.readyState === 1 && w.send(Uint8Array.from([0xc0, 0])), (KEEPALIVE_S * 2000) / 3);
+  }
+
+  const ch = {
+    name,
+    state: "connecting",
+    async publish(to, _from, text) {
+      if (!ws || ws.readyState !== 1 || ch.state !== "up") throw new Error(`${name} is not connected.`);
+      const t = str(topic(to));
+      const p = utf8(text);
+      const body = new Uint8Array(t.length + p.length);
+      body.set(t);
+      body.set(p, t.length);
+      ws.send(packet(0x30, body));
+    },
+    subscribe(box, fn) {
+      const t = topic(box);
+      if (!subs.has(t)) {
+        subs.set(t, new Set());
+        if (ch.state === "up") ws.send(packet(0x82, Uint8Array.from([...nextId(), ...str(t), 0])));
+      }
+      subs.get(t).add(fn);
+      stopped = false;
+      open();
+      return () => {
+        const fns = subs.get(t);
+        if (!fns?.delete(fn) || fns.size) return;
+        subs.delete(t);
+        if (ch.state === "up" && ws?.readyState === 1) ws.send(packet(0xa2, Uint8Array.from([...nextId(), ...str(t)])));
+      };
+    },
+    close() {
+      stopped = true;
+      clearTimeout(timer);
+      clearInterval(pingTimer);
+      clearTimeout(watchdog);
+      ws?.close();
+    },
+  };
+  return ch;
+}
+
+return { mqttChannel };
+})();
+// ---- /apps/wormhole/src/qr.js
+__m["/apps/wormhole/src/qr.js"] = (function () {
+"use strict";
+
+
+const ECC = {
+  L: { bits: 1, perBlock: [7, 10, 15, 20, 26, 18, 20, 24, 30, 18], blocks: [1, 1, 1, 1, 1, 2, 2, 2, 2, 4] },
+  M: { bits: 0, perBlock: [10, 16, 26, 18, 24, 16, 18, 22, 22, 26], blocks: [1, 1, 1, 2, 2, 4, 4, 4, 5, 5] },
+};
+const QR_MAX_VERSION = 10;
+
+const bit = (v, i) => ((v >>> i) & 1) !== 0;
+
+function rawModules(ver) {
+  let r = (16 * ver + 128) * ver + 64;
+  if (ver >= 2) {
+    const n = Math.floor(ver / 7) + 2;
+    r -= (25 * n - 10) * n - 55;
+    if (ver >= 7) r -= 36;
+  }
+  return r;
+}
+const dataWords = (ver, lvl) => Math.floor(rawModules(ver) / 8) - ECC[lvl].perBlock[ver - 1] * ECC[lvl].blocks[ver - 1];
+
+
+function encodeData(bytes, ver, lvl) {
+  const bits = [];
+  const put = (v, n) => {
+    for (let i = n - 1; i >= 0; i--) bits.push((v >>> i) & 1);
+  };
+  put(4, 4); // byte mode
+  put(bytes.length, ver < 10 ? 8 : 16);
+  for (const b of bytes) put(b, 8);
+  const cap = dataWords(ver, lvl) * 8;
+  put(0, Math.min(4, cap - bits.length));
+  put(0, (8 - (bits.length % 8)) % 8);
+  for (let pad = 0xec; bits.length < cap; pad ^= 0xec ^ 0x11) put(pad, 8);
+  const out = new Array(bits.length / 8).fill(0);
+  bits.forEach((b, i) => (out[i >>> 3] |= b << (7 - (i & 7))));
+  return out;
+}
+
+const mul = (x, y) => {
+  let z = 0;
+  for (let i = 7; i >= 0; i--) {
+    z = (z << 1) ^ ((z >>> 7) * 0x11d);
+    z ^= ((y >>> i) & 1) * x;
+  }
+  return z;
+};
+function divisor(deg) {
+  const r = new Array(deg).fill(0);
+  r[deg - 1] = 1;
+  let root = 1;
+  for (let i = 0; i < deg; i++) {
+    for (let j = 0; j < deg; j++) {
+      r[j] = mul(r[j], root);
+      if (j + 1 < deg) r[j] ^= r[j + 1];
+    }
+    root = mul(root, 2);
+  }
+  return r;
+}
+function remainder(data, div) {
+  const r = div.map(() => 0);
+  for (const b of data) {
+    const f = b ^ r.shift();
+    r.push(0);
+    div.forEach((c, i) => (r[i] ^= mul(c, f)));
+  }
+  return r;
+}
+
+function interleave(data, ver, lvl) {
+  const n = ECC[lvl].blocks[ver - 1];
+  const eccLen = ECC[lvl].perBlock[ver - 1];
+  const raw = Math.floor(rawModules(ver) / 8);
+  const shortN = n - (raw % n);
+  const shortLen = Math.floor(raw / n);
+  const div = divisor(eccLen);
+  const blocks = [];
+  for (let i = 0, k = 0; i < n; i++) {
+    const dat = data.slice(k, k + shortLen - eccLen + (i < shortN ? 0 : 1));
+    k += dat.length;
+    const ecc = remainder(dat, div);
+    if (i < shortN) dat.push(0); // keeps the blocks aligned; never emitted
+    blocks.push(dat.concat(ecc));
+  }
+  const out = [];
+  for (let i = 0; i < blocks[0].length; i++) blocks.forEach((b, j) => (i !== shortLen - eccLen || j >= shortN) && out.push(b[i]));
+  return out;
+}
+
+
+function alignPositions(ver) {
+  if (ver === 1) return [];
+  const n = Math.floor(ver / 7) + 2;
+  const step = Math.ceil((ver * 4 + 4) / (n * 2 - 2)) * 2;
+  const out = [6];
+  for (let pos = ver * 4 + 10; out.length < n; pos -= step) out.splice(1, 0, pos);
+  return out;
+}
+
+const MASKS = [(x, y) => (x + y) % 2 === 0, (x, y) => y % 2 === 0, (x, y) => x % 3 === 0, (x, y) => (x + y) % 3 === 0, (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0, (x, y) => ((x * y) % 2) + ((x * y) % 3) === 0, (x, y) => (((x * y) % 2) + ((x * y) % 3)) % 2 === 0, (x, y) => (((x + y) % 2) + ((x * y) % 3)) % 2 === 0];
+
+function build(codewords, ver, lvl) {
+  const size = ver * 4 + 17;
+  const mod = Array.from({ length: size }, () => new Array(size).fill(false));
+  const fn = Array.from({ length: size }, () => new Array(size).fill(false));
+  const set = (x, y, dark) => {
+    mod[y][x] = dark;
+    fn[y][x] = true;
+  };
+
+  for (let i = 0; i < size; i++) {
+    set(6, i, i % 2 === 0);
+    set(i, 6, i % 2 === 0);
+  }
+  for (const [cx, cy] of [[3, 3], [size - 4, 3], [3, size - 4]]) {
+    for (let dy = -4; dy <= 4; dy++) {
+      for (let dx = -4; dx <= 4; dx++) {
+        const dist = Math.max(Math.abs(dx), Math.abs(dy));
+        const x = cx + dx;
+        const y = cy + dy;
+        if (x >= 0 && x < size && y >= 0 && y < size) set(x, y, dist !== 2 && dist !== 4);
+      }
+    }
+  }
+  const pos = alignPositions(ver);
+  pos.forEach((cx, i) =>
+    pos.forEach((cy, j) => {
+      if ((i === 0 && j === 0) || (i === 0 && j === pos.length - 1) || (i === pos.length - 1 && j === 0)) return;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(cx + dx, cy + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+    }),
+  );
+
+  const formatBits = (mask) => {
+    const data = (ECC[lvl].bits << 3) | mask;
+    let rem = data;
+    for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+    const bits = ((data << 10) | rem) ^ 0x5412;
+    for (let i = 0; i <= 5; i++) set(8, i, bit(bits, i));
+    set(8, 7, bit(bits, 6));
+    set(8, 8, bit(bits, 7));
+    set(7, 8, bit(bits, 8));
+    for (let i = 9; i < 15; i++) set(14 - i, 8, bit(bits, i));
+    for (let i = 0; i < 8; i++) set(size - 1 - i, 8, bit(bits, i));
+    for (let i = 8; i < 15; i++) set(8, size - 15 + i, bit(bits, i));
+    set(8, size - 8, true);
+  };
+  formatBits(0); // reserves the cells; written again once the mask is known
+  if (ver >= 7) {
+    let rem = ver;
+    for (let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1f25);
+    const bits = (ver << 12) | rem;
+    for (let i = 0; i < 18; i++) {
+      const a = size - 11 + (i % 3);
+      const b = Math.floor(i / 3);
+      set(a, b, bit(bits, i));
+      set(b, a, bit(bits, i));
+    }
+  }
+
+  let i = 0;
+  for (let right = size - 1; right >= 1; right -= 2) {
+    if (right === 6) right = 5;
+    for (let vert = 0; vert < size; vert++) {
+      for (let j = 0; j < 2; j++) {
+        const x = right - j;
+        const y = ((right + 1) & 2) === 0 ? size - 1 - vert : vert;
+        if (!fn[y][x] && i < codewords.length * 8) {
+          mod[y][x] = bit(codewords[i >>> 3], 7 - (i & 7));
+          i++;
+        }
+      }
+    }
+  }
+
+  const apply = (mask) => {
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!fn[y][x] && MASKS[mask](x, y)) mod[y][x] = !mod[y][x];
+  };
+  let best = 0;
+  let bestScore = Infinity;
+  for (let mask = 0; mask < 8; mask++) {
+    apply(mask);
+    formatBits(mask);
+    const score = penalty(mod, size);
+    if (score < bestScore) {
+      best = mask;
+      bestScore = score;
+    }
+    apply(mask); // undo
+  }
+  apply(best);
+  formatBits(best);
+  return { size, version: ver, ecc: lvl, mask: best, modules: mod };
+}
+
+function penalty(mod, size) {
+  let p = 0;
+  let dark = 0;
+  const lines = [];
+  for (let i = 0; i < size; i++) {
+    lines.push(mod[i]);
+    lines.push(mod.map((row) => row[i]));
+  }
+  for (const line of lines) {
+    let run = 1;
+    for (let i = 1; i <= size; i++) {
+      if (i < size && line[i] === line[i - 1]) run++;
+      else {
+        if (run >= 5) p += 3 + run - 5;
+        run = 1;
+      }
+    }
+    for (let i = 0; i + 11 <= size; i++) {
+      const s = line.slice(i, i + 11).map(Number).join("");
+      if (s === "10111010000" || s === "00001011101") p += 40;
+    }
+  }
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (mod[y][x]) dark++;
+      if (x + 1 < size && y + 1 < size && mod[y][x] === mod[y][x + 1] && mod[y][x] === mod[y + 1][x] && mod[y][x] === mod[y + 1][x + 1]) p += 3;
+    }
+  }
+  const total = size * size;
+  return p + Math.max(0, Math.ceil(Math.abs(dark * 20 - total * 10) / total) - 1) * 10;
+}
+
+function qrMatrix(text, { ecc = "M" } = {}) {
+  const bytes = new TextEncoder().encode(String(text));
+  for (const lvl of ecc === "L" ? ["L"] : [ecc, "L"]) {
+    if (!ECC[lvl]) throw new Error("The error correction level must be L or M.");
+    for (let ver = 1; ver <= QR_MAX_VERSION; ver++) {
+      if (4 + (ver < 10 ? 8 : 16) + bytes.length * 8 > dataWords(ver, lvl) * 8) continue;
+      return build(interleave(encodeData(bytes, ver, lvl), ver, lvl), ver, lvl);
+    }
+  }
+  throw new Error("The text is too long for a QR code here.");
+}
+
+function qrSvg(m, { scale = 6, quiet = 4, dark = "#000", light = "#fff" } = {}) {
+  if (![dark, light].every((c) => /^#[0-9a-f]{3,6}$/i.test(c))) throw new Error("Colours must be hex values.");
+  const n = m.size + 2 * quiet;
+  let d = "";
+  for (let y = 0; y < m.size; y++) {
+    for (let x = 0; x < m.size; x++) {
+      if (!m.modules[y][x]) continue;
+      let len = 1;
+      while (x + len < m.size && m.modules[y][x + len]) len++;
+      d += `M${x + quiet} ${y + quiet}h${len}v1h-${len}z`;
+      x += len;
+    }
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n} ${n}" width="${n * scale}" height="${n * scale}" role="img" aria-label="QR code" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="${light}"/><path d="${d}" fill="${dark}"/></svg>`;
+}
+
+return { QR_MAX_VERSION, qrMatrix, qrSvg };
+})();
+// ---- /apps/wormhole/src/link.js
+__m["/apps/wormhole/src/link.js"] = (function () {
+"use strict";
+
+
+const CODE_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"; // no 0 o 1 i l: easy to read out and type
+const MAX_CODE = 100;
+
+function newCode(len = 6, rand = (n) => globalThis.crypto.getRandomValues(new Uint8Array(n))) {
+  const limit = 256 - (256 % CODE_ALPHABET.length);
+  let out = "";
+  while (out.length < len) for (const b of rand(len * 2)) if (b < limit && out.length < len) out += CODE_ALPHABET[b % CODE_ALPHABET.length];
+  return out;
+}
+
+function shareBase(loc, configured = "") {
+  const clean = (u) => String(u).trim().split("#")[0];
+  if (clean(configured)) return clean(configured);
+  return /^https?:$/.test(loc.protocol) ? `${loc.origin}${loc.pathname}` : "";
+}
+
+const pairUrl = (base, code) => `${base}#pair=${encodeURIComponent(code)}`;
+
+function readHash(hash) {
+  const q = new URLSearchParams(String(hash).replace(/^#/, ""));
+  const code = (q.get("pair") ?? "").trim();
+  const profile = /^[\w-]{1,20}$/.test(q.get("profile") ?? "") ? q.get("profile") : "";
+  return { pair: code && code.length <= MAX_CODE ? code : null, profile };
+}
+
+const cleanHash = (profile) => (profile ? `#profile=${profile}` : "");
+
+return { CODE_ALPHABET, MAX_CODE, newCode, shareBase, pairUrl, readHash, cleanHash };
+})();
+// ---- /apps/wormhole/src/app.js
+__m["/apps/wormhole/src/app.js"] = (function () {
+"use strict";
+const { CONFIG } = __m["/apps/wormhole/src/config.js"];
+const { createWormhole } = __m["/apps/wormhole/src/engine.js"];
+const { mdToTree, fileKind } = __m["/apps/wormhole/src/markdown.js"];
+const { idbStorage, memoryStorage, CORE_STORES, fromUtf8 } = __m["/framework/core/index.js"];
+const { ntfyChannel } = __m["/framework/modules/signaling/index.js"];
+const { mqttChannel } = __m["/framework/modules/signaling/mqtt.js"];
+const { identiconSvg, formatId } = __m["/framework/modules/pairing/index.js"];
+const { qrMatrix, qrSvg } = __m["/apps/wormhole/src/qr.js"];
+const { newCode, shareBase, pairUrl, readHash, cleanHash } = __m["/apps/wormhole/src/link.js"];
+
+
+
+
+
+
+
+
+
+
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+};
+const fmtTime = (ts) => new Date(ts).toLocaleString("sv-SE");
+const fmtSize = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(2)} MB` : n >= 1e3 ? `${(n / 1e3).toFixed(1)} kB` : `${n} B`);
+const profile = readHash(location.hash).profile;
+
+function log(m) {
+  const p = $("log");
+  p.textContent += `${new Date().toLocaleTimeString("sv-SE")}  ${m}\n`;
+  if (p.textContent.length > 20000) p.textContent = p.textContent.slice(-15000);
+  p.scrollTop = 1e9;
+}
+function banner(m) {
+  $("banner").hidden = false;
+  $("banner").textContent = m;
+  log(`BANNER: ${m}`);
+}
+
+function detectEnv() {
+  const ua = navigator.userAgent;
+  const uad = navigator.userAgentData;
+  let browser = "";
+  let os = "";
+  if (uad?.brands) {
+    const b = uad.brands.filter((x) => !/not.?a.?brand/i.test(x.brand));
+    const p = b.find((x) => !/^chromium$/i.test(x.brand)) ?? b[0];
+    if (p) browser = `${p.brand} ${p.version}`;
+    os = uad.platform ?? "";
+  }
+  if (!browser) {
+    const m = /(Edg|OPR|Firefox|CriOS|Chrome|Version)\/([\d.]+)/.exec(ua);
+    const names = { Edg: "Edge", OPR: "Opera", CriOS: "Chrome", Version: "Safari" };
+    browser = m ? `${names[m[1]] ?? m[1]} ${m[2].split(".")[0]}` : "Unknown browser";
+  }
+  if (!os) os = /Windows/.test(ua) ? "Windows" : /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iOS" : /Mac OS X/.test(ua) ? "macOS" : /CrOS/.test(ua) ? "ChromeOS" : /Linux/.test(ua) ? "Linux" : "Unknown OS";
+  return { name: browser.slice(0, 60), os: os.slice(0, 40) };
+}
+
+function fillDev(host, d) {
+  const key = `${d.id}|${d.name}|${d.os}`;
+  if (host.dataset.key === key) return;
+  host.dataset.key = key;
+  const svg = new DOMParser().parseFromString(identiconSvg(d.id), "image/svg+xml").documentElement;
+  const t = el("div");
+  t.append(el("div", "id", formatId(d.id)), el("div", "muted", `${d.name ?? "?"} · ${d.os ?? "?"}`));
+  host.replaceChildren(document.importNode(svg, true), t);
+}
+
+
+let wh = null;
+const changed = () => wh?.channelsChanged();
+const channels = [
+  ...CONFIG.ntfy.map((base) => Object.assign(ntfyChannel({ base, onState: changed }), { name: new URL(base).host })),
+  ...CONFIG.mqtt.map(([name, url]) => mqttChannel({ name, url, onState: changed })),
+];
+
+
+const VIEWS = ["vIdle", "vHost", "vJoin", "vCand", "vPaired"];
+let snap = null;
+
+function tick() {
+  const d = snap?.pair?.deadline;
+  const left = d ? Math.max(0, Math.ceil((d - Date.now()) / 1000)) : "–";
+  $("count").textContent = left;
+  $("countCand").textContent = left;
+}
+setInterval(tick, 250);
+
+function render(s) {
+  snap = s;
+  const me = { id: s.me.id, ...s.me.info };
+  fillDev($("me"), me);
+  const p = s.pair;
+  const view = s.peer ? "vPaired" : !p ? "vIdle" : p.phase === "candidate" ? "vCand" : p.role === "host" ? "vHost" : "vJoin";
+  for (const v of VIEWS) $(v).hidden = v !== view;
+  $("pairPill").textContent = view === "vPaired" ? "paired" : view === "vIdle" ? "unpaired" : "pairing…";
+  $("pairPill").className = `pill${view === "vPaired" ? " ok" : ""}`;
+  if (view === "vHost") {
+    $("hostStatus").textContent = p.phase !== "open" ? "Connecting to signaling channels…" : p.note ? `${p.note} Still listening.` : shareUrl ? "Window open. On the new device open the link or scan the QR code." : "Window open. On the new device open this HTML file, type the pairing code and press “Join”.";
+    renderShare();
+  }
+  if (view === "vJoin") $("joinStatus").textContent = p.phase === "searching" ? "Looking for an open pairing window…" : "Connecting to signaling channels…";
+  if (view === "vCand") {
+    const other = { id: p.candidate.id, ...p.candidate.info };
+    const host = p.role === "host";
+    fillDev($("candOffer"), host ? me : other);
+    fillDev($("candJoin"), host ? other : me);
+    $("lblOffer").textContent = `Offering device (${host ? "this device" : "other device"})`;
+    $("lblJoin").textContent = `Joining device (${host ? "other device" : "this device"})`;
+    $("btnTrust").disabled = p.trusted.local;
+    const { local, remote } = p.trusted;
+    $("candStatus").textContent = local ? (remote ? "Both trusted, saving…" : "Waiting for the other device to trust…") : remote ? "The other device already trusts you. Compare the IDs, then decide." : "";
+  }
+  if (s.peer) {
+    fillDev($("peerDev"), s.peer);
+    $("onlinePill").textContent = s.online ? "online" : "offline";
+    $("onlinePill").className = `pill${s.online ? " ok" : ""}`;
+  }
+  $("pairMsg").textContent = s.peer || p ? "" : s.note;
+  $("chanRow").hidden = !s.peer && !p;
+  $("chans").replaceChildren(
+    ...s.channels.map((c) => {
+      const chip = el("span", `chip ${c.state}`, c.name);
+      chip.title = c.state;
+      return chip;
+    }),
+  );
+  renderFile(s);
+  tick();
+}
+
+
+let hostCode = ""; // the code of the pairing this device offers
+let autoCode = ""; // the last code made up here, so that a code the user typed is never replaced
+let shareUrl = ""; // the link for the new device, "" when this page has no address to share
+let qrFor = "";
+
+function renderShare() {
+  $("hostCode").textContent = hostCode;
+  $("shareLink").hidden = !shareUrl;
+  $("noLink").hidden = !!shareUrl;
+  if (!shareUrl || qrFor === shareUrl) return;
+  qrFor = shareUrl;
+  $("pairUrl").value = shareUrl;
+  try {
+    const svg = new DOMParser().parseFromString(qrSvg(qrMatrix(shareUrl)), "image/svg+xml").documentElement;
+    $("qr").replaceChildren(document.importNode(svg, true));
+  } catch (e) {
+    $("qr").replaceChildren(el("p", "muted", `No QR code: ${e.message}`));
+  }
+}
+
+async function copyLink() {
+  const input = $("pairUrl");
+  let done = false;
+  try {
+    await navigator.clipboard.writeText(input.value);
+    done = true;
+  } catch {
+    input.select(); // no clipboard access (file://, old browser): select it and try the old way
+    try {
+      done = !!document.execCommand?.("copy");
+    } catch {
+      /* the link stays selected: Ctrl+C */
+    }
+  }
+  $("btnCopy").textContent = done ? "Copied" : "Press Ctrl+C";
+  setTimeout(() => ($("btnCopy").textContent = "Copy"), 2000);
+}
+
+
+const SYNC = { "in sync": "ok", "in sync (peer offline)": "ok", sending: "warn", receiving: "warn", syncing: "warn", pending: "warn" };
+const SYNC_TEXT = { sending: "sending…", receiving: "receiving…", syncing: "syncing…", pending: "pending – peer offline, sent on reconnect" };
+let shownFs = "";
+let urls = [];
+const mkUrl = (bytes, type) => {
+  const u = URL.createObjectURL(new Blob([bytes], { type }));
+  urls.push(u);
+  return u;
+};
+
+function renderFile(s) {
+  $("fileCard").hidden = !s.peer;
+  $("syncPill").textContent = SYNC_TEXT[s.sync] ?? s.sync;
+  $("syncPill").className = `pill ${SYNC[s.sync] ?? ""}`;
+  $("prog").hidden = s.progress === null;
+  if (s.progress !== null) $("prog").value = s.progress;
+  const fs = s.file?.fs ?? "";
+  if (fs === shownFs) return;
+  shownFs = fs;
+  for (const u of urls.splice(0)) URL.revokeObjectURL(u);
+  $("preview").hidden = true;
+  $("preview").replaceChildren();
+  if (!s.file) {
+    $("fileInfo").className = "muted";
+    $("fileInfo").textContent = "No file yet.";
+    return;
+  }
+  showFile(s.file).catch((e) => {
+    $("fileInfo").textContent = `Cannot open the stored file: ${e.message}`;
+  });
+}
+
+async function showFile(f) {
+  const data = await wh.readFile();
+  if (!data || data.meta.fs !== shownFs) return; // replaced meanwhile
+  const { bytes, meta } = data;
+  const a = el("a", null, `Download “${meta.name}”`);
+  a.id = "dl";
+  a.href = mkUrl(bytes, "application/octet-stream");
+  a.download = meta.name;
+  const dl = el("dl");
+  const row = (k, v) => dl.append(el("dt", null, k), el("dd", null, v));
+  row("Timestamp", fmtTime(meta.ts));
+  row("Set by", meta.by === snap.me.id ? "this device" : snap.peer && meta.by === snap.peer.id ? `${snap.peer.name} · ${snap.peer.os}` : formatId(meta.by));
+  row("Size", fmtSize(meta.size));
+  row("Version", `v${meta.n}`);
+  if (meta.mtime) row("File modified", fmtTime(meta.mtime));
+  row("SHA-256", `${meta.hash.slice(0, 16)}…`);
+  $("fileInfo").className = "";
+  $("fileInfo").replaceChildren(a, dl);
+  preview(bytes, meta);
+}
+
+const MD_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6", "p", "pre", "code", "blockquote", "ul", "ol", "li", "hr", "a", "strong", "em", "del", "br"]);
+function toDom(nodes) {
+  const frag = document.createDocumentFragment();
+  for (const n of nodes) {
+    if (typeof n === "string") {
+      frag.append(n);
+      continue;
+    }
+    if (!MD_TAGS.has(n.tag)) continue;
+    const e = document.createElement(n.tag);
+    if (n.tag === "a") {
+      e.href = n.href;
+      e.rel = "noopener noreferrer";
+      e.target = "_blank";
+      e.addEventListener("click", (ev) => {
+        if (!confirm(`Open this link?\n\n${n.href}`)) ev.preventDefault();
+      });
+    }
+    e.append(toDom(n.kids));
+    frag.append(e);
+  }
+  return frag;
+}
+
+function preview(bytes, meta) {
+  const kind = fileKind(meta.name, meta.type);
+  const box = $("preview");
+  box.replaceChildren();
+  box.hidden = !kind;
+  if (!kind) return;
+  if (kind.kind === "image") {
+    const img = el("img", "pv-img");
+    img.alt = meta.name;
+    img.src = mkUrl(bytes, kind.mime);
+    img.addEventListener("error", () => box.replaceChildren(el("p", "muted", "This image cannot be shown here. Download it instead.")));
+    return void box.append(img);
+  }
+  const full = fromUtf8(bytes);
+  let limit = CONFIG.maxText;
+  let rendered = kind.kind === "md";
+  const draw = () => {
+    const cut = full.length > limit;
+    const text = cut ? full.slice(0, limit) : full;
+    const bar = el("div", "pv-bar");
+    bar.append(el("span", null, cut ? `Showing the first ${fmtSize(limit)} of ${fmtSize(full.length)}.` : kind.kind === "md" ? "Markdown" : "Text"));
+    const buttons = el("span", "row");
+    if (cut) {
+      const all = el("button", "secondary small", "Show all");
+      all.onclick = () => {
+        limit = Infinity;
+        draw();
+      };
+      buttons.append(all);
+    }
+    if (kind.kind === "md") {
+      const toggle = el("button", "secondary small", rendered ? "Show source" : "Show rendered");
+      toggle.id = "mdToggle";
+      toggle.onclick = () => {
+        rendered = !rendered;
+        draw();
+      };
+      buttons.append(toggle);
+    }
+    bar.append(buttons);
+    let body;
+    if (rendered) {
+      body = el("div", "md");
+      body.append(toDom(mdToTree(text)));
+    } else body = el("pre", "pv-text", text);
+    body.id = "pvBody";
+    box.replaceChildren(bar, body);
+  };
+  draw();
+}
+
+const fileMsg = (m) => {
+  $("fileMsg").textContent = m ?? "";
+  if (m) log(m);
+};
+async function setLocalFile(f) {
+  fileMsg("");
+  try {
+    if (f.size > CONFIG.maxFile) throw new Error(`The file is too large (${fmtSize(f.size)}). The limit is ${fmtSize(CONFIG.maxFile)}, because everything is held in memory.`);
+    await wh.setFile({ name: f.name, type: f.type, bytes: new Uint8Array(await f.arrayBuffer()), mtime: f.lastModified });
+  } catch (e) {
+    fileMsg(e.message);
+  }
+}
+
+
+function startPair(role) {
+  const field = $("code");
+  if (role === "host") {
+    if (!field.value.trim() || field.value === autoCode) field.value = autoCode = newCode();
+    hostCode = field.value.trim();
+    const base = shareBase(location, CONFIG.baseUrl);
+    shareUrl = base ? pairUrl(base, hostCode) : "";
+    qrFor = "";
+  }
+  try {
+    wh.pair(role, field.value).catch(() => {}); // the reason is shown through the snapshot
+  } catch (e) {
+    log(e.message);
+  }
+}
+$("btnPair").onclick = () => startPair("host");
+$("btnJoin").onclick = () => startPair("join");
+$("btnCopy").onclick = copyLink;
+
+function joinFromHash() {
+  const { pair, profile: p } = readHash(location.hash);
+  if (pair === null || !wh) return;
+  history.replaceState(null, "", `${location.pathname}${location.search}${cleanHash(p)}`);
+  if (snap?.peer) return log("The link holds a pairing code, but this device is already paired. Unpair first.");
+  if (snap?.pair) return log("The link holds a pairing code, but pairing is already running.");
+  $("code").value = pair;
+  log("joining with the code from the link");
+  startPair("join");
+}
+window.addEventListener("hashchange", joinFromHash);
+$("btnCancelHost").onclick = $("btnCancelJoin").onclick = () => wh.cancelPair();
+$("btnTrust").onclick = () => wh.trust();
+$("btnReject").onclick = () => wh.reject();
+$("btnUnpair").onclick = () => {
+  if (confirm("Unpair? This also deletes the local copy of the shared file.")) wh.unpair().catch((e) => log(e.message));
+};
+
+const drop = $("drop");
+drop.onclick = () => $("pick").click();
+drop.onkeydown = (e) => {
+  if (e.key === "Enter" || e.key === " ") $("pick").click();
+};
+$("pick").onchange = (e) => {
+  if (e.target.files[0]) setLocalFile(e.target.files[0]);
+  e.target.value = "";
+};
+for (const ev of ["dragenter", "dragover"]) {
+  drop.addEventListener(ev, (e) => {
+    e.preventDefault();
+    drop.classList.add("over");
+  });
+}
+for (const ev of ["dragleave", "drop"]) {
+  drop.addEventListener(ev, (e) => {
+    e.preventDefault();
+    drop.classList.remove("over");
+  });
+}
+drop.addEventListener("drop", (e) => {
+  const files = e.dataTransfer.files;
+  if (files.length > 1) fileMsg("Only one file is shared; using the first one.");
+  if (files[0]) setLocalFile(files[0]);
+});
+for (const ev of ["dragover", "drop"]) window.addEventListener(ev, (e) => e.preventDefault());
+window.addEventListener("pagehide", () => wh?.bye());
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && wh?.channelsChanged());
+
+
+async function start() {
+  if (!(globalThis.crypto?.subtle && globalThis.RTCPeerConnection)) {
+    banner("WebCrypto or WebRTC is unavailable. This page needs a secure context: https:// or file://.");
+    $("btnPair").disabled = $("btnJoin").disabled = true;
+    return;
+  }
+  const stores = [...CORE_STORES, "app"];
+  let storage = idbStorage(`wormhole${profile ? `-${profile}` : ""}`, stores);
+  try {
+    await storage.get("app", "peer");
+  } catch (e) {
+    storage = memoryStorage(stores);
+    banner(`IndexedDB is unavailable (${e?.message ?? "blocked"}): identity, pairing and file will NOT survive a reload.`);
+  }
+  wh = createWormhole({ storage, channels, config: CONFIG, info: detectEnv(), onChange: render, onLog: log });
+  try {
+    await wh.init();
+  } catch (e) {
+    return banner(`Cannot start: ${e.message}`);
+  }
+  joinFromHash();
+}
+start();
+
+return {  };
+})();
+</script>
+</body>
+</html>
